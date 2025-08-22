@@ -1,6 +1,10 @@
 from multiprocessing import Process
 
-def gnss_proc():
+def main():
+    gnss_proc = Process(target=gnss_proc)
+    blenano_proc = Process(target=blenano_proc)
+
+def gnss_proc(tel_q):
     import serial
     import csv
 
@@ -64,10 +68,8 @@ def gnss_proc():
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
                 writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
-                q.put([f_raw[1],dec_lat, dec_long, altitude])
+                tel_q.put([f_raw[1],dec_lat, dec_long, altitude])
                 print(f"{dec_lat}, {dec_long}, {altitude}")
-
-def gsm_proc():
 
 def blenano_proc():
     import serial
@@ -125,11 +127,15 @@ def blenano_proc():
                         buffer += char
     read_function()
 
+'''
 def hackrf_procs():
 
 def lora_proc():
 
 def state_machine_proc():
 
+def gsm_proc():
+'''
 
 if __name__ == '__main__':
+    main()
