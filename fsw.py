@@ -1,10 +1,114 @@
+'''
+Author: Ashwin Kumar
+'''
+
 from multiprocessing import Process
+import subprocess
+import os
+import time
+# import csv
+
+'''
+gnss_proc_log = <filepath>
+blenano_proc_log = <filepath>
+blevsas_log = <filepath>
+telemetry_log = <filepath>
+hackrf_log = <filepath>
+
+#,<0TEAM_ID>,<1MISSION_TIME>,<2PACKET_COUNT>,<3TEMP>,<4PRESSURE>,<5FREQ>,<6RSSI>,<7ROLL>,<8PITCH>,<9YAW>,<10GNSS_ALT>,<11GNSS_LAT>,<12GNSS_LONG>,<13GNSS_SAT>,<14VOLTAGE>,<15CURRENT>,<16STATE>,<17CHECKSUM>,$
+'''
+
+mission_timer_start = 0
+
+blenano_proc_log = 'payload_fsw/proc_files/blenano_proc_log'
+blevsas_log = 'payload_fsw/proc_files/blevsas_log'
+gnss_proc_log = 'payload_fsw/proc_files/gnss_proc_log'
+hackrf_log = 'payload_fsw/proc_files/hackrf_log'
 
 def main():
-    gnss_proc = Process(target=gnss_proc)
-    blenano_proc = Process(target=blenano_proc)
+    state    =  int(0)
+    boot     =  int(0) 
+    idle     =  int(1)
+    ascent   =  int(2)
+    descent  =  int(3)
+    recovery =  int(4)
 
-def gnss_proc(tel_q):
+    while True:
+        
+        if (state == boot):
+            gnss_proc = Process(target=gnss_proc)
+            blenano_proc = Process(target=blenano_proc)
+            hackrf_proc = Process(target=hackrf_proc)
+            # lora_proc = Process(target=lora_proc) in recieve mode
+
+            if (os.path.getsize(telemetry_log) > 0):
+                last_tel = getline(telemetry_log)
+                last_tel_arr = last_tel.split(',')[1:19]
+                state = last_tel_arr[16]
+        if (state == idle):
+            mission_timer_start = time.time()
+            ## polling of sensors -> read from files?
+            ## generate telemetry strin
+            ## wait for ack?
+            telm_str = generate_telemetry()
+            ## save telm_str?
+            '''
+            initial idea -> addd in write mode if file empty otherwise do append
+            but the file will be empty by default and will have content if theres a power break so seems redundant
+            -> think about a better design
+            
+            if (os.path.getsize(telemetry_log) > 0):
+                with open(telemetry_log, 'a', newline='') as telemetry_fd:
+                    telemetry_writer = csv.writer(telemetry_fd)
+                    telemetry_writer.write(telm_str)
+            else:
+                with open(telemetry_log, 'w', newline='') as telemetry_fd:
+                    telemetry_writer = csv.writer(telemetry_fd)
+                    telemetry_writer.writerow(['#','<TEAM_ID>','<MISSION_TIME>','<PACKET_COUNT>','<TEMP>','<PRESSURE>','<FREQ>','<RSSI>','<ROLL>','<PITCH>','<YAW>','<GNSS_ALT>','<GNSS_LAT>','<GNSS_LONG>','<GNSS_SAT>','<VOLTAGE>','<CURRENT>','<STATE>','<CHECKSUM>','$'])
+                    telemetry_writer.write(telm_str)
+                '''
+    if (state == ascent):
+        #velocity decrease -> state change for 1 sec
+
+'''
+#,<0TEAM_ID>,<1MISSION_TIME>,<2PACKET_COUNT>,<3TEMP>,<4PRESSURE>,<5FREQ>,<6RSSI>,<7ROLL>,<8PITCH>,<9YAW>,<10GNSS_ALT>,<11GNSS_LAT>,<12GNSS_LONG>,<13GNSS_SAT>,<14VOLTAGE>,<15CURRENT>,<16STATE>,<17CHECKSUM>,$
+'''
+def generate_telemetry(counter):
+    team_id = '050'
+    mission_time = int(time.time() - mission_timer_start)
+
+    ble = getline(blenano_proc_log)
+    ble_arr = ble.split(',')
+    temp = ble_arr[1]
+    roll = ble_arr[2]
+    pitch = ble_arr[3]
+    yaw = ble_arr[4]
+    pressure = ble_arr[5]
+
+    gnss = getline(gnss_proc_log)
+    gnss_arr = gnss.split(',')
+    gnss_alt = gnss_arr[3]
+    gnss_lat = gnss_arr[1]
+    gnss_long = gnss_arr[2]
+    gnss_sat = 
+
+    vsas_volt = getline(blevsas_log)
+    vsas_volt_list = vsas_volt.split(',')
+    voltage = vsas_volt_list[1]
+
+
+    hackrf_line = getline(hackrf_log)
+    hackrf_arr = hackrf_line.split(',')
+    freq = hackrf_arr[1]
+    rssi = hackrf_arr[2]
+
+    #current
+    
+
+    telm_str = f"{team_id}, {mission_time}, {counter}, {temp}, {pressure}, {freq}, {rssi}, {roll}, {pitch}, {yaw}, {gnss_alt}, {gnss_lat}, {gnss_long}, {gnss_sat}, {voltage}, "
+    return telm_str
+
+def gnss_proc(gnss_q):
     import serial
     import csv
 
@@ -23,7 +127,6 @@ def gnss_proc(tel_q):
         except ValueError:
             return None
         
-
     def decimal_long(coord, direction):
         if not coord:
             return None
@@ -57,7 +160,6 @@ def gnss_proc(tel_q):
                     except ValueError:
                         altitude = None
 
-        
             elif raw.startswith("$GNRMC"): 
                 f_raw = raw.split(",")
                 if len(f_raw) > 6:
@@ -68,10 +170,10 @@ def gnss_proc(tel_q):
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
                 writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
-                tel_q.put([f_raw[1],dec_lat, dec_long, altitude])
-                print(f"{dec_lat}, {dec_long}, {altitude}")
+                gnss_q.put([f_raw[1],dec_lat, dec_long, altitude])
+                #print(f"{dec_lat}, {dec_long}, {altitude}")
 
-def blenano_proc():
+def blenano_proc(nano_q):
     import serial
     import time
     import csv
@@ -117,7 +219,7 @@ def blenano_proc():
                             if calculated_crc == received_crc:
                                 writer.writerow(payload_str.rsplit(','))
                                 print(payload_str)
-                                q.put(payload_str)
+                                nano_q.put(payload_str)
                             else:
                                 print(f" CRC mismatch Received: {received_crc}, Calculated: {calculated_crc}")
                         except Exception as e:
@@ -128,15 +230,14 @@ def blenano_proc():
     read_function()
 
 
-def hackrf_procs():
+def hackrf_proc():
     import subprocess
     import csv
     import datetime
     import time
-    import sys
     
     def run_hackrf_sweep():
-        with open("/home/pi5/Documents/rssi_log.csv", "a", newline="") as file:
+        with open(hackrf_log, "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Timestamp", "Frequency_MHz", "RSSI_dBm"])
 
@@ -166,7 +267,7 @@ def hackrf_procs():
     run_hackrf_sweep()
 
 # Update the Queue System to reading relevant files.
-def lora_proc():
+def lora_proc(nano_q, gnss_q):
     #!/usr/bin/env python3
 
     """
@@ -193,7 +294,6 @@ def lora_proc():
     import argparse
     from datetime import datetime
     import subprocess
-    import traceback
 
     # Import the LoRa class from our main file
     # Make sure lora_rpi5_interface.py is in the same directory
@@ -213,8 +313,8 @@ def lora_proc():
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 line = subprocess.check_output(['tail','-1',"/home/pi5/Documents/rssi_log.csv"])
-                blenano_str = ','.join(q1.get()) # convert ble list to string
-                gnss_str = ','.join(q2.get()) # convert gnss list to string
+                blenano_str = ','.join(nano_q.get()) # convert ble list to string
+                gnss_str = ','.join(gnss_q.get()) # convert gnss list to string
                 message = str(line)+ str(blenano_str)+str(counter)+str(gnss_str)
 
                 #message = f"RPi5 LoRa Test #{counter} at {timestamp}"
@@ -351,31 +451,34 @@ def lora_proc():
 
 def gsm_proc():
     import serial
-import time
+    import time
 
-ser = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
+    ser = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
+    def main():
+        while True:
+            send_sms('+918984955170', 'Helo from rpi and sim800')
+            time.sleep(1)
 
-def send_at(command):
-    tr_buffer = (command+'\r\n').encode(encoding="utf-8")
-    ser.write((command+'\r\n').encode())
-    while ser.readline():
-        print(ser.readline().decode('utf-8'))
+    def send_at(command):
+        tr_buffer = (command+'\r\n').encode(encoding="utf-8")
+        ser.write((command+'\r\n').encode())
+        while ser.readline():
+            print(ser.readline().decode('utf-8'))
 
-        
-def send_sms(number, message):
-    send_at("AT+CMGF=1")
-    set_nu = 'AT+CMGS="'+number+'"'
-    send_at(set_nu)
-    msg = message + chr(26)
-    msg_bytes = msg.encode()
-    ser.write(msg_bytes)
-    
+    def send_sms(number, message):
+        send_at("AT+CMGF=1")
+        set_nu = 'AT+CMGS="'+number+'"'
+        send_at(set_nu)
+        msg = message + chr(26)
+        msg_bytes = msg.encode()
+        ser.write(msg_bytes)    
 
-while True:
-    send_sms('+918984955170', 'Helo from rpi and sim800')
-    time.sleep(1)
+    main()
 
-def state_machine_proc():
+
+def getline(proc_fp):
+    line = subprocess.get_output(['tail','-n','1',proc_fp])
+    return line.decode()
 
 
 if __name__ == '__main__':

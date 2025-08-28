@@ -1,3 +1,7 @@
+'''
+Author: Aman Gupta
+'''
+
 def hackrf():
  # Required for some system-level operations, good practice for systemd
     import subprocess

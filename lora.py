@@ -2,6 +2,7 @@ def lora(q1, q2):
     #!/usr/bin/env python3
 
     """
+    Author: Aman Gupta, Darsh Salian
     LoRa Test Script for Raspberry Pi 5
     -----------------------------------
     This script tests basic functionality of the LoRa module.

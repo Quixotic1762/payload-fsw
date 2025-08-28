@@ -1,3 +1,7 @@
+'''
+Author: Ashwin Kumar
+'''
+
 import serial
 import csv
 
@@ -42,7 +46,7 @@ with open("/home/pi5p/Integrated /logs/gnss.txt", "a", newline="") as gnss_fd:
             long_dir = f_raw[6]
             dec_long = decimal_long(long, long_dir)
             writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
-            print(f"Lattitude: {dec_lat} || Longitude: {dec_long} || Altitude: {altitude}")
+            print(f"{dec_lat}, {dec_long}, {altitude}")
     
 
     

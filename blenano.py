@@ -1,3 +1,7 @@
+'''
+Author: Ghanit Taunk, Pathik Raythana
+'''
+
 import serial
 import time
 import csv
