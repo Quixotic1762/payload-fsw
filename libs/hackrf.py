@@ -8,10 +8,9 @@ def hackrf():
     import csv
     import datetime
     import time
-    import sys
     
     def run_hackrf_sweep():
-        with open("/home/pi5/Documents/rssi_log.csv", "a", newline="") as file:
+        with open(hackrf_log, "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Timestamp", "Frequency_MHz", "RSSI_dBm"])
 
@@ -32,7 +31,6 @@ def hackrf():
                             writer.writerow([timestamp, freq_mhz, float(rssi)])
                             file.flush()
                             #print(f"{timestamp} | {freq_mhz:.2f} MHz | {rssi} dBm")
-
                         time.sleep(5)
 
                     except ValueError:

@@ -1,4 +1,4 @@
-def lora(q1, q2):
+def lora():
     #!/usr/bin/env python3
 
     """
@@ -26,7 +26,6 @@ def lora(q1, q2):
     import argparse
     from datetime import datetime
     import subprocess
-    import traceback
 
     # Import the LoRa class from our main file
     # Make sure lora_rpi5_interface.py is in the same directory
@@ -46,9 +45,10 @@ def lora(q1, q2):
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 line = subprocess.check_output(['tail','-1',"/home/pi5/Documents/rssi_log.csv"])
-                blenano_str = ','.join(q1.get()) # convert ble list to string
-                gnss_str = ','.join(q2.get()) # convert gnss list to string
+                blenano_str = ','.join(nano_q.get()) # convert ble list to string
+                gnss_str = ','.join(gnss_q.get()) # convert gnss list to string
                 message = str(line)+ str(blenano_str)+str(counter)+str(gnss_str)
+                ## generate_telemetry() 
 
                 #message = f"RPi5 LoRa Test #{counter} at {timestamp}"
                 print(f"Sending: {message}")
