@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """
+LINE 145 power change. 
 LoRa Interface for Raspberry Pi 5
 ---------------------------------
 This script demonstrates how to interface a LoRa radio module (SX127x) with a Raspberry Pi 5.
@@ -142,7 +143,7 @@ class LoRa:
         self.write_register(REG_MODEM_CONFIG_3, 0x04)
         
         # Set output power
-        self.set_tx_power(tx_power)
+        self.set_tx_power(tx_power,outputpin=1 ) #LINE 145
         
         # Configure modem
         self.set_bandwidth(bandwidth)

@@ -24,15 +24,24 @@ Telemetry Format
 3. Interrupt Handlers for Telecommands
 4. Use pipes on processes that need to transmit something.
 5. LoRa stays in reception, switches to transmission when telemetry is ready, simulate interrupts in software basically. 
+6. Improve the file system access thing, its too slow.
 '''
 
-from multiprocessing import *
+from multiprocessing import Process, Value, Queue
 import subprocess
 import os
 import time
 import zlib
 
 mission_timer_start = 0
+
+state = {
+    0: "BOOT",
+    1: "IDLE",
+    2: "ASCENT",
+    3: "DESCENT",
+    4: "RECOVERY"
+    }
 
 # File Paths For the process logs 
 blenano_proc_log = 'proc_files/blenano_proc_log'
@@ -41,13 +50,19 @@ gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'proc_files/telemetry_log'
 
-state = {
-0: "BOOT",
-1: "IDLE",
-2: "ASCENT",
-3: "DESCENT",
-4: "RECOVERY"
-}
+MIN_ASCENT_ALTITUDE = 30
+
+class ascent_state_parameters:
+    last_check = 0
+    last_altitude = 0
+    last_acceleration = 0
+    altitude_flag = [0,0]
+    acceleration_flag = [0,0]
+    min_altitude_flag = 0
+    flag_sum = 0
+    change_state = False
+
+ascent_conditions = ascent_state_parameters()
 
 def main(global_state, global_packet_count):
     boot     =  0
@@ -55,10 +70,12 @@ def main(global_state, global_packet_count):
     ascent   =  2
     descent  =  3
     recovery =  4
-    gnss_proc = Process(target=gnss_proc)
-    blenano_proc = Process(target=blenano_proc)
-    hackrf_proc = Process(target=hackrf_proc)
+    #gnss_proc = Process(target=gnss_proc)
+    #blenano_proc = Process(target=blenano_proc)
+    #ackrf_proc = Process(target=hackrf_proc)
+    
     while True:
+        time.sleep(0.15)
         state = global_state.value
         if (state == boot):
             if (file_manager(global_state) == 0):
@@ -67,7 +84,7 @@ def main(global_state, global_packet_count):
             if (file_manager(global_state) == 1):
                 print("Start LoRa in Transmit Mode")
             telemetry_log_fd = open(telemetry_log, "a", newline="")
-
+            global_state.value = 1
         if (state == idle):
             global mission_timer_start
             mission_timer_start = time.time()
@@ -78,7 +95,7 @@ def main(global_state, global_packet_count):
                 generate_telemetry() might read from it while its still writing, 
                 add protection for that lock or something. 
             '''
-            telm_string = generate_telemetry(global_packet_count)
+            telm_string = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string)
             ''''
             --> Wait for Ack -> Start Transmiting Telemetry String
@@ -90,12 +107,19 @@ def main(global_state, global_packet_count):
             '''
             state change parameter from ascent to descent V, A, H must change for more than 3.
             '''
+            idle_to_ascent_change()
+            if ascent_conditions.change_state == True:
+                print("state = Ascent")
+                global_state.value = ascent
+    
         if (state == ascent):
+            print("ascent state")
             '''
             telemetry storage
-            Interrupt based system for telecommands.
+            --> LoRa in reception mode, switch to transmit mode and transmit telemetry
+            --> if receieved something process it
             '''
-            telm_string_ascent = generate_telemetry(global_packet_count)
+            telm_string_ascent = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string_ascent)
             # telm_string_ascent -> lora_proc -> transmission to ground
             '''
@@ -109,11 +133,12 @@ def main(global_state, global_packet_count):
                 -> 2 seconds
                 -> state change DESCENT.
             '''
+        
         if (state == descent):
             '''
             check altitude if between 490 and 510 open parachute. 
             '''
-            telm_string_descent = generate_telemetry(global_packet_count)
+            telm_string_descent = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string_descent)
             '''
             signal ble to actuate fins, uart.
@@ -141,7 +166,65 @@ def main(global_state, global_packet_count):
             -> transmit sms_payload
             -> Trigger audio beacons
             '''
+def cpy_src():
+    file = open("src_log", "r", newline='')
+    ble_fd = open('proc_files/blenano_proc_log', "w", newline='')
+    while True:
+        line = file.readline()
+        ble_fd.write(line)
+        ble_fd.flush()
+        time.sleep(0.05)
 
+def idle_to_ascent_change():
+    global ascent_conditions
+    global MIN_ASCENT_ALTITUDE
+
+    current_check_time = time.time()
+    ble = getline(blenano_proc_log)
+    ble_arr = ble.split(',')
+
+    current_altitude = float(ble_arr[6])
+    current_acceleration = float(ble_arr[9])
+
+    delta_time = current_check_time - ascent_conditions.last_check
+    delta_altitude = current_altitude - ascent_conditions.last_altitude
+    delta_acceleration = current_acceleration - ascent_conditions.last_acceleration
+
+    if delta_time < 2:
+        if delta_altitude > 0:
+            ascent_conditions.altitude_flag[0] = 1
+        else:
+            ascent_conditions.altitude_flag[1] += 1
+
+        if delta_acceleration > 0:
+            ascent_conditions.acceleration_flag[0] = 1
+        else:
+            ascent_conditions.acceleration_flag[1] += 1
+        
+        if current_altitude > MIN_ASCENT_ALTITUDE:
+            ascent_conditions.min_altitude_flag = 1
+        else:
+            ascent_conditions.min_altitude_flag = 0
+    else:
+        if (ascent_conditions.altitude_flag[1] == 0):
+            ascent_conditions.flag_sum += ascent_conditions.altitude_flag[0]
+
+        if (ascent_conditions.acceleration_flag[1] == 0):
+            ascent_conditions.flag_sum += ascent_conditions. acceleration_flag[0]
+
+        ascent_conditions.flag_sum += ascent_conditions.min_altitude_flag
+        ascent_conditions.altitude_flag[1] = 0
+        ascent_conditions.acceleration_flag[1] = 0
+        print(f"flag sum: {ascent_conditions.flag_sum}")
+
+        if ascent_conditions.flag_sum >= 2:
+            print(f"flags met {ascent_conditions.flag_sum}")
+            ascent_conditions.change_state = True
+        ascent_conditions.last_check = current_check_time
+
+    ascent_conditions.last_altitude = current_altitude
+    ascent_conditions.last_acceleration = current_acceleration
+    ascent_conditions.flag_sum = 0
 
 def file_manager(global_state):
     global state
@@ -156,8 +239,12 @@ def file_manager(global_state):
     last_line = getline(file_path)
     last_line_arr = last_line.split(",")
 
-    state = [key for key, val in state.items() if val == last_line_arr[16]][0]
-    if (state == 4):
+    try:
+        current_state = [key for key, val in state.items() if val == last_line_arr[16]][0]
+    except IndexError:
+        return 0
+
+    if (current_state == 4):
         new_file_split = last_file.split('_')
         file_num = int(new_file_split[2])
         file_num += 1
@@ -168,7 +255,7 @@ def file_manager(global_state):
         file.close()
         telemetry_log = new_file_path
         return 1
-    global_state.value = state
+    global_state.value = current_state
     # start LoRa in Transmit Mode
     telemetry_log = file_path
     return 0
@@ -217,7 +304,7 @@ def getline(proc_fp):
     return line.decode()
 
 '''
-def gnss_proc(gnss_q):
+def gnss_proc():
     
 
 def blenano_proc():
@@ -226,34 +313,21 @@ def blenano_proc():
 def hackrf_proc():
     
 # Update the Queue System to reading relevant files.
-def lora_proc(nano_q, gnss_q):
-    #!/usr/bin/env python3
+def lora_proc(telm_queue):
 
-    """
-    LoRa Test Script for Raspberry Pi 5
-    -----------------------------------
-    This script tests basic functionality of the LoRa module.
-    It supports both sending and receiving modes.
+def telecom_parse_proc(telecommand):
 
-    Usage:
-      python lora_test.py --mode send   # Send test messages every 5 seconds
-      python lora_test.py --mode recv   # Continuously listen for messages
-    
-    Connections:
-    - GPIO4 (pin 7)   -> RESET
-    - GPIO17 (pin 11) -> DIO0
-    - GPIO10 (pin 19) -> MOSI
-    - GPIO9 (pin 21)  -> MISO
-    - GPIO11 (pin 23) -> SCK
-    - GPIO8 (pin 24)  -> NSS (CS)
-    - Optional: GPIO23, GPIO24, GPIO25 -> DIO1, DIO2, DIO3
-    """
 def gsm_proc():
 '''
 
 if __name__ == '__main__':
     global_state = Value("i", 0)
     global_packet_count = Value("i", 0)
+    lora_telm_queue = Queue()
+    p1 = Process(target=cpy_src)
+    p1.start()
+    time.sleep(0.15)
+    main(global_state, global_packet_count)
     #file_manager(global_state)
     #print(telemetry_log)
     #telm = generate_telemetry(global_packet_count, global_state)
