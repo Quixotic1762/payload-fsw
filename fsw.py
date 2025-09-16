@@ -52,7 +52,7 @@ telemetry_log = 'proc_files/telemetry_log'
 
 MIN_ASCENT_ALTITUDE = 30
 
-class ascent_state_parameters:
+class state_change_parameters:
     last_check = 0
     last_altitude = 0
     last_acceleration = 0
@@ -62,19 +62,25 @@ class ascent_state_parameters:
     flag_sum = 0
     change_state = False
 
-class descent_change_parameters():
-    last_check = 0
+class recovery_change_parameters():
+    last_check = 0 
     last_altitude = 0
-    last_acceleration = 0
-    altitude_flag = [0,0]
-    acceleration_flag = [0,0]
-    min_altitude_flag = 0
+    alt_flag = [0,0]
+    velocity_flag = [0,0]
+    velocity = 0
     flag_sum = 0
     change_state = False
 
-ascent_conditions = ascent_state_parameters()
 
-descent_change = descent_change_parameters()
+#ascent_conditions = state_change_parameters()
+
+#descent_change = state_change_parameters()
+
+#recovery_change = state_change_parameters()
+
+state_change = state_change_parameters()
+
+recovery_change = recovery_change_parameters()
 
 def main(global_state, global_packet_count):
     boot     =  0
@@ -87,7 +93,7 @@ def main(global_state, global_packet_count):
     #ackrf_proc = Process(target=hackrf_proc)
     
     while True:
-        time.sleep(0.15)
+        time.sleep(0.1)
         state = global_state.value
         if (state == boot):
             print("Boot state")
@@ -99,7 +105,7 @@ def main(global_state, global_packet_count):
                 print("Start LoRa in Transmit Mode")
 
             telemetry_log_fd = open(telemetry_log, "a", newline="")
-            global_state.value = 1
+            global_state.value = idle
             
         if (state == idle):
             print("Idle state")
@@ -119,9 +125,9 @@ def main(global_state, global_packet_count):
             state change parameter from ascent to descent V, A, H must change for more than 3.
             '''
             idle_to_ascent_change()
-            if ascent_conditions.change_state == True:
-                print("state = Ascent")
+            if state_change.change_state == True:
                 global_state.value = ascent
+                state_change.change_state = False
     
         if (state == ascent):
             print("ascent state")
@@ -145,7 +151,7 @@ def main(global_state, global_packet_count):
                 -> state change DESCENT.
             '''
             descent_change_check()
-            if descent_change.change_state == True:
+            if state_change.change_state == True:
                 global_state.value = descent
         
         if (state == descent):
@@ -163,9 +169,13 @@ def main(global_state, global_packet_count):
                 -> altitude below 10m and constant.
                 -> velocity is zero
                 -> constant acceleration
-                -> for 2s 
+                -> for 2s   
             '''
+            recovery_change_check()
+            if recovery_change.change_state == True:
+                global_state.value = recovery
         if (state == recovery):
+            print("recovery")
             '''
             terminate lora proc
             terminate ble proc
@@ -201,45 +211,45 @@ def idle_to_ascent_change():
     current_altitude = float(ble_arr[6])
     current_acceleration = float(ble_arr[9])
 
-    delta_time = current_check_time - ascent_conditions.last_check
-    delta_altitude = current_altitude - ascent_conditions.last_altitude
-    delta_acceleration = current_acceleration - ascent_conditions.last_acceleration
+    delta_time = current_check_time - state_change.last_check
+    delta_altitude = current_altitude - state_change.last_altitude
+    delta_acceleration = current_acceleration - state_change.last_acceleration
 
     if delta_time < 2:
         if delta_altitude > 0:
-            ascent_conditions.altitude_flag[0] = 1
+            state_change.altitude_flag[0] = 1
         else:
-            ascent_conditions.altitude_flag[1] += 1
+            state_change.altitude_flag[1] += 1
 
         if delta_acceleration > 0:
-            ascent_conditions.acceleration_flag[0] = 1
+            state_change.acceleration_flag[0] = 1
         else:
-            ascent_conditions.acceleration_flag[1] += 1
+            state_change.acceleration_flag[1] += 1
         
         if current_altitude > MIN_ASCENT_ALTITUDE:
-            ascent_conditions.min_altitude_flag = 1
+            state_change.min_altitude_flag = 1
         else:
-            ascent_conditions.min_altitude_flag = 0
+            state_change.min_altitude_flag = 0
     else:
-        if (ascent_conditions.altitude_flag[1] == 0):
-            ascent_conditions.flag_sum += ascent_conditions.altitude_flag[0]
+        if (state_change.altitude_flag[1] == 0):
+            state_change.flag_sum += state_change.altitude_flag[0]
 
-        if (ascent_conditions.acceleration_flag[1] == 0):
-            ascent_conditions.flag_sum += ascent_conditions. acceleration_flag[0]
+        if (state_change.acceleration_flag[1] == 0):
+            state_change.flag_sum += state_change. acceleration_flag[0]
 
-        ascent_conditions.flag_sum += ascent_conditions.min_altitude_flag
-        ascent_conditions.altitude_flag[1] = 0
-        ascent_conditions.acceleration_flag[1] = 0
-        #print(f"flag sum: {ascent_conditions.flag_sum}")
+        state_change.flag_sum += state_change.min_altitude_flag
+        state_change.altitude_flag[1] = 0
+        state_change.acceleration_flag[1] = 0
+        #print(f"flag sum: {state_change.flag_sum}")
 
-        if ascent_conditions.flag_sum >= 2:
-            #print(f"flags met {ascent_conditions.flag_sum}")
-            ascent_conditions.change_state = True
-        ascent_conditions.last_check = current_check_time
+        if state_change.flag_sum >= 2:
+            #print(f"flags met {state_change.flag_sum}")
+            state_change.change_state = True
+        state_change.last_check = current_check_time
 
-    ascent_conditions.last_altitude = current_altitude
-    ascent_conditions.last_acceleration = current_acceleration
-    ascent_conditions.flag_sum = 0
+    state_change.last_altitude = current_altitude
+    state_change.last_acceleration = current_acceleration
+    state_change.flag_sum = 0
 
 def descent_change_check():
     global descent_change
@@ -250,34 +260,74 @@ def descent_change_check():
     current_altitude = float(ble_arr[6])
     current_acceleration = float(ble_arr[9])
 
-    delta_time = current_check_time - descent_change.last_check
-    delta_altitude = current_altitude - descent_change.last_altitude
-    delta_acceleration = current_acceleration - descent_change.last_acceleration
+    delta_time = current_check_time - state_change.last_check
+    delta_altitude = current_altitude - state_change.last_altitude
+    delta_acceleration = current_acceleration - state_change.last_acceleration
+
     if delta_time < 2:
         if delta_altitude < 0:
-            descent_change.altitude_flag[0] = 1
+            state_change.altitude_flag[0] = 1
         else:
-            descent_change.altitude_flag[1] += 1
+            state_change.altitude_flag[1] += 1
 
         if delta_acceleration < 0:
-            descent_change.acceleration_flag[0] = 1
+            state_change.acceleration_flag[0] = 1
         else:
-            descent_change.acceleration_flag[1] += 1
+            state_change.acceleration_flag[1] += 1
     else:
-        if descent_change.altitude_flag[1] == 0:
-            descent_change.flag_sum += descent_change.altitude_flag[0]
-        if descent_change.acceleration_flag[1] == 0:
-            descent_change.flag_sum += descent_change.acceleration_flag[0]
-        descent_change.altitude_flag[1] = 0
-        descent_change.acceleration_flag[1] = 0
+        if state_change.altitude_flag[1] == 0:
+            state_change.flag_sum += state_change.altitude_flag[0]
+        if state_change.acceleration_flag[1] == 0:
+            state_change.flag_sum += state_change.acceleration_flag[0]
+        state_change.altitude_flag[1] = 0
+        state_change.acceleration_flag[1] = 0
 
-        if descent_change.flag_sum >= 1:
-            descent_change.change_state = True
-        descent_change.last_check = current_check_time
+        if state_change.flag_sum >= 1:
+            state_change.change_state = True
+        state_change.last_check = current_check_time
     
-    descent_change.last_altitude = current_altitude
-    descent_change.last_acceleration = current_acceleration
-    descent_change.flag_sum = 0
+    state_change.last_altitude = current_altitude
+    state_change.last_acceleration = current_acceleration
+    state_change.flag_sum = 0
+
+def recovery_change_check():
+    global recovery_change
+
+    current_check_time = time.time()
+    ble = getline(blenano_proc_log)
+    ble_arr = ble.split(',')
+
+    current_altitude = float(ble_arr[6])
+
+    delta_time = float(current_check_time - recovery_change.last_check)
+    delta_altitude = current_altitude - recovery_change.last_altitude
+    velocity = delta_altitude / delta_time
+    
+    if delta_time < 2:
+        if current_altitude < 10:
+            recovery_change.alt_flag[0] = 1
+        else:
+            recovery_change.alt_flag[1] += 1
+        if velocity < 5:
+            recovery_change.velocity_flag[0] = 1
+        else:
+            recovery_change.velocity_flag[1] += 1
+
+    else:
+        if recovery_change.alt_flag[1] == 0:
+            recovery_change.flag_sum += recovery_change.alt_flag[0]
+        if recovery_change.velocity_flag[1] == 0:
+            recovery_change.flag_sum += recovery_change.velocity_flag[0]
+
+        recovery_change.alt_flag = [0,0]
+        recovery_change.velocity_flag = [0,0]
+
+        if recovery_change.flag_sum == 2:
+            recovery_change.change_state = True
+        recovery_change.last_check = current_check_time
+    
+    recovery_change.last_altitude = current_altitude
+    recovery_change.flag_sum = 0
 
 def file_manager(global_state):
     global state
@@ -361,7 +411,7 @@ def gnss_proc():
     
 
 def blenano_proc():
-    
+
 
 def hackrf_proc():
     
