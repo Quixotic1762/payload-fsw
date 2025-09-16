@@ -62,7 +62,19 @@ class ascent_state_parameters:
     flag_sum = 0
     change_state = False
 
+class descent_change_parameters():
+    last_check = 0
+    last_altitude = 0
+    last_acceleration = 0
+    altitude_flag = [0,0]
+    acceleration_flag = [0,0]
+    min_altitude_flag = 0
+    flag_sum = 0
+    change_state = False
+
 ascent_conditions = ascent_state_parameters()
+
+descent_change = descent_change_parameters()
 
 def main(global_state, global_packet_count):
     boot     =  0
@@ -78,6 +90,7 @@ def main(global_state, global_packet_count):
         time.sleep(0.15)
         state = global_state.value
         if (state == boot):
+            print("Boot state")
             state_restore = file_manager(global_state)
             if (state_restore == 0):
                 # lora_proc = Process(target=lora_proc) in recieve mode
@@ -89,6 +102,7 @@ def main(global_state, global_packet_count):
             global_state.value = 1
             
         if (state == idle):
+            print("Idle state")
             global mission_timer_start
             mission_timer_start = time.time()
             
@@ -130,8 +144,12 @@ def main(global_state, global_packet_count):
                 -> 2 seconds
                 -> state change DESCENT.
             '''
+            descent_change_check()
+            if descent_change.change_state == True:
+                global_state.value = descent
         
         if (state == descent):
+            print("descent state")
             '''
             check altitude if between 490 and 510 open parachute. 
             '''
@@ -212,16 +230,54 @@ def idle_to_ascent_change():
         ascent_conditions.flag_sum += ascent_conditions.min_altitude_flag
         ascent_conditions.altitude_flag[1] = 0
         ascent_conditions.acceleration_flag[1] = 0
-        print(f"flag sum: {ascent_conditions.flag_sum}")
+        #print(f"flag sum: {ascent_conditions.flag_sum}")
 
         if ascent_conditions.flag_sum >= 2:
-            print(f"flags met {ascent_conditions.flag_sum}")
+            #print(f"flags met {ascent_conditions.flag_sum}")
             ascent_conditions.change_state = True
         ascent_conditions.last_check = current_check_time
 
     ascent_conditions.last_altitude = current_altitude
     ascent_conditions.last_acceleration = current_acceleration
     ascent_conditions.flag_sum = 0
+
+def descent_change_check():
+    global descent_change
+    current_check_time = time.time()
+    ble = getline(blenano_proc_log)
+    ble_arr = ble.split(',')
+
+    current_altitude = float(ble_arr[6])
+    current_acceleration = float(ble_arr[9])
+
+    delta_time = current_check_time - descent_change.last_check
+    delta_altitude = current_altitude - descent_change.last_altitude
+    delta_acceleration = current_acceleration - descent_change.last_acceleration
+    if delta_time < 2:
+        if delta_altitude < 0:
+            descent_change.altitude_flag[0] = 1
+        else:
+            descent_change.altitude_flag[1] += 1
+
+        if delta_acceleration < 0:
+            descent_change.acceleration_flag[0] = 1
+        else:
+            descent_change.acceleration_flag[1] += 1
+    else:
+        if descent_change.altitude_flag[1] == 0:
+            descent_change.flag_sum += descent_change.altitude_flag[0]
+        if descent_change.acceleration_flag[1] == 0:
+            descent_change.flag_sum += descent_change.acceleration_flag[0]
+        descent_change.altitude_flag[1] = 0
+        descent_change.acceleration_flag[1] = 0
+
+        if descent_change.flag_sum >= 1:
+            descent_change.change_state = True
+        descent_change.last_check = current_check_time
+    
+    descent_change.last_altitude = current_altitude
+    descent_change.last_acceleration = current_acceleration
+    descent_change.flag_sum = 0
 
 def file_manager(global_state):
     global state
