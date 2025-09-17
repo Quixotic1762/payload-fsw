@@ -10,7 +10,7 @@ def hackrf():
     import time
     
     def run_hackrf_sweep():
-        with open(hackrf_log, "a", newline="") as file:
+        with open("proc_files/hackrf_log", "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Timestamp", "Frequency_MHz", "RSSI_dBm"])
 

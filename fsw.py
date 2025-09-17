@@ -3,12 +3,6 @@ Author: Ashwin Kumar
 '''
 
 '''
-TODO->  
-GNSS Satellite
-Current Value Calculation
-Function to check last state
-'''
-'''
 gnss_proc_log = <filepath>
 blenano_proc_log = <filepath>
 blevsas_log = <filepath>
@@ -18,16 +12,13 @@ hackrf_log = <filepath>
 Telemetry Format
 #,<0TEAM_ID>,<1MISSION_TIME>,<2PACKET_COUNT>,<3TEMP>,<4PRESSURE>,<5FREQ>,<6RSSI>,<7ROLL>,<8PITCH>,<9YAW>,<10GNSS_ALT>,<11GNSS_LAT>,<12GNSS_LONG>,<13GNSS_SAT>,<14VOLTAGE>,<15CURRENT>,<16STATE>,<17CHECKSUM>,$
 '''
+
 '''
-1. Implement File Locks Or something To make sure you dont read while a line is being written.
-2. Telemetry Transmission -> invoke the process, then implement a pipe or something along those lines to send it whenever a telemetry string is ready. || Perhaps a queue and switch states depending on whether there is a request to serve.
-3. Interrupt Handlers for Telecommands
-4. Use pipes on processes that need to transmit something.
-5. LoRa stays in reception, switches to transmission when telemetry is ready, simulate interrupts in software basically. 
-6. Improve the file system access thing, its too slow.
+PAYLOAD:
+#<TEAM_ID> <MISSION_TIME> <PACKET_COUNT> <BLE_TEMP><BLE_PRESSURE> <BLE_ALT> <HACKRF_FREQ> <HACKRF_RSSI> <AX> <AY> <AZ> <GX> <GY> <GZ> <MX><MY><MZ> <SOFTWARE_STATE> <GNSS_LAT> <GNSS_LONG> <GNSS_ALT> <GNSS_TIME> <GNSS_SATS> <VOLTAGE> <CURRENT> <RPI_TEMP> <LORA_RSSI><ERROR_FLAGS><CHECKSUM><ACK>$\r\n
 '''
 
-from multiprocessing import Process, Value, Queue
+from multiprocessing import Process, Value, Queue, Event
 import subprocess
 import os
 import time
@@ -67,6 +58,7 @@ class recovery_change_parameters():
     last_altitude = 0
     alt_flag = [0,0]
     velocity_flag = [0,0]
+    last_vel_time = 0
     velocity = 0
     flag_sum = 0
     change_state = False
@@ -88,6 +80,7 @@ def main(global_state, global_packet_count):
     ascent   =  2
     descent  =  3
     recovery =  4
+
     #gnss_proc = Process(target=gnss_proc)
     #blenano_proc = Process(target=blenano_proc)
     #ackrf_proc = Process(target=hackrf_proc)
@@ -95,25 +88,35 @@ def main(global_state, global_packet_count):
     while True:
         time.sleep(0.1)
         state = global_state.value
+
         if (state == boot):
             print("Boot state")
             state_restore = file_manager(global_state)
+
             if (state_restore == 0):
-                # lora_proc = Process(target=lora_proc) in recieve mode
-                print("Start LoRa in Recieve Mode")
+                state = global_state.value
+                lora_proc.start()
+                tx_enable.set()
+            
             if (state_restore == 1):
-                print("Start LoRa in Transmit Mode")
+                global_state.value = idle
+                lora_proc.start()
+                state = global_state.value
 
             telemetry_log_fd = open(telemetry_log, "a", newline="")
-            global_state.value = idle
             
         if (state == idle):
             print("Idle state")
             global mission_timer_start
+            '''' this should happen once and then not again.'''
             mission_timer_start = time.time()
             
             telm_string = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string)
+
+            if not tx_enable.is_set():
+                tx_enable.wait()
+            telm_q.put(telm_string)
             ''''
             --> Wait for Ack -> Start Transmiting Telemetry Stringacceleration
             LoRa_proc is running in recieve mode:
@@ -300,9 +303,10 @@ def recovery_change_check():
     current_altitude = float(ble_arr[6])
 
     delta_time = float(current_check_time - recovery_change.last_check)
+    delta_vel_time = float(current_check_time - recovery_change.last_vel_time)
     delta_altitude = current_altitude - recovery_change.last_altitude
-    velocity = delta_altitude / delta_time
-    
+    velocity = delta_altitude / delta_vel_time
+    recovery_change.last_vel_time = current_check_time
     if delta_time < 2:
         if current_altitude < 10:
             recovery_change.alt_flag[0] = 1
@@ -312,7 +316,6 @@ def recovery_change_check():
             recovery_change.velocity_flag[0] = 1
         else:
             recovery_change.velocity_flag[1] += 1
-
     else:
         if recovery_change.alt_flag[1] == 0:
             recovery_change.flag_sum += recovery_change.alt_flag[0]
@@ -358,8 +361,8 @@ def file_manager(global_state):
         file.close()
         telemetry_log = new_file_path
         return 1
+    
     global_state.value = current_state
-    # start LoRa in Transmit Mode
     telemetry_log = file_path
     return 0
     
@@ -406,18 +409,207 @@ def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
     return line.decode()
 
-'''
-def gnss_proc():
+
+def lora(telm_q, tx_enable):
+    import sys
+    import time
+    import argparse
+    from datetime import datetime
+    import subprocess
+    from lora_rpi5_interface import LoRa
+
+    '''
+    sends telemetry recieved via queue telm_q
+    send_mode(lora, telm_str): sends telm_str
+    '''
+    def send(lora):
+        ''' send msg -> if retval = 1 -> send again'''
+        message = telm_q.get()
+        return lora.send(message.encode())
+
+    def main():
+        try:
+            '''
+            lora = LoRa(
+                frequency=args.freq,
+                bandwidth=args.bw,
+                spreading_factor=args.sf,
+                coding_rate=args.cr,
+                tx_power=args.power,
+                verbose=args.debug
+            )
+            '''
+            lora = LoRa()
+            while True:
+                enable = tx_enable.is_set()
+                if (telm_q.qsize() > 0) and enable:
+                    send(lora)
+                        
+                payload, rssi = lora.receive(timeout=1000)
+                if payload:
+                    if payload == 'ack':
+                        tx_enable.set()
     
-
-def blenano_proc():
-
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            if 'lora' in locals():
+                lora.close()
+                # print("LoRa resources released.")
+    
+    #if __name__ == "__main__":
+    main()
 
 def hackrf_proc():
+    import subprocess
+    import csv
+    import datetime
+    import time
     
-# Update the Queue System to reading relevant files.
-def lora_proc(telm_queue):
+    def run_hackrf_sweep():
+        with open(hackrf_log, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Timestamp", "Frequency_MHz", "RSSI_dBm"])
 
+            process = subprocess.Popen(["hackrf_sweep", "-f", "700:2700"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            for line in process.stdout:
+                parts = line.strip().split(",")
+                if len(parts) >= 7: 
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    try:
+                        hz_low = int(parts[2])
+                        hz_high = int(parts[3])
+                        bin_width = float(parts[4])
+                        rssi_values = parts[6:]
+
+                        for i, rssi in enumerate(rssi_values):
+                            freq_mhz = (hz_low + i * bin_width) / 1e6
+                            writer.writerow([timestamp, freq_mhz, float(rssi)])
+                            file.flush()
+                            #print(f"{timestamp} | {freq_mhz:.2f} MHz | {rssi} dBm")
+                        time.sleep(5)
+
+                    except ValueError:
+                        continue
+
+    run_hackrf_sweep()
+
+def gnss_proc():
+    import serial
+    import csv
+
+    ser = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
+    gnss_proc_log = 'proc_files/gnss_proc_log'
+
+    def decimal(coord, direction):
+        if not coord:
+            return None
+        try:
+            degrees = int(coord[:2])
+            minutes = float(coord[2:])
+            decimal = degrees + (minutes / 60)
+            if direction in ["S", "W"]:
+                decimal *= -1
+            return decimal
+        except ValueError:
+            return None
+        
+    def decimal_long(coord, direction):
+        if not coord:
+            return None
+        try:
+            degrees = int(coord[:3])
+            minutes = float(coord[3:])
+    
+            decimal = degrees + (minutes / 60)
+            if direction in ["S", "W"]:
+                decimal *= -1
+            return decimal
+        except ValueError:
+            return None 
+    #print(decimal)
+
+    altitude = None
+    
+    with open(gnss_proc_log, "a", newline="") as gnss_fd:
+        writer = csv.writer(gnss_fd)
+        writer.writerow(["UTC", "Latitude", "Longitude", "Altitude"])
+    
+        while True:
+            raw = ser.readline().decode("utf-8", errors='ignore').strip()
+        #print(raw)
+        
+            if raw.startswith("$GNGGA"):
+                f_raw = raw.split(",")
+                if len(f_raw) > 9 and f_raw[9]:
+                    try:
+                        altitude = float(f_raw[9])
+                    except ValueError:
+                        altitude = None
+
+            elif raw.startswith("$GNRMC"): 
+                f_raw = raw.split(",")
+                if len(f_raw) > 6:
+                    lat = f_raw[3]
+                    lat_dir = f_raw[4]
+                    dec_lat = decimal(lat, lat_dir)
+                    long = f_raw[5]
+                    long_dir = f_raw[6]
+                    dec_long = decimal_long(long, long_dir)
+                writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
+
+def blenano_proc():
+    import csv
+    import serial
+
+    ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
+    ser.reset_input_buffer()
+
+    ble_file = blenano_proc
+    volt_file = blevsas_log
+
+    
+    with open(ble_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "Timestamp", "Temperature", "Roll", "Pitch", "Yaw",
+            "Pressure", "Altitude", "ax", "ay", "az",
+            "gx", "gy", "gz", "mx", "my", "mz"
+        ])
+
+    with open(volt_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Timestamp", "Voltage"])
+
+    while True:
+        try:
+            line = ser.readline().decode("utf-8", errors="ignore").strip()
+            if not line:
+                continue
+
+            # Voltage
+            if line.startswith("<V,") and line.endswith(">"):
+                parts = line[1:-1].split(",")
+                if len(parts) == 3:
+                    _, ts, volt = parts
+                    with open(volt_file, "a", newline="") as vf:
+                        writer = csv.writer(vf)
+                        writer.writerow([ts, volt])
+
+            # Sensor
+            elif line.startswith("<S,") and line.endswith(">"):
+                parts = line[1:-1].split(",")
+                if len(parts) == 17:  
+                    _, *sensor_data = parts
+                    with open(ble_file, "a", newline="") as sf:
+                        writer = csv.writer(sf)
+                        writer.writerow(sensor_data)
+                    #print("Sensor:", sensor_data)
+
+        except Exception as e:
+            print("Error reading serial data:", e)
+'''
 def telecom_parse_proc(telecommand):
 
 def gsm_proc():
@@ -426,9 +618,11 @@ def gsm_proc():
 if __name__ == '__main__':
     global_state = Value("i", 0)
     global_packet_count = Value("i", 0)
-    lora_telm_queue = Queue()
+    telm_q = Queue()
+    tx_enable = Event()
     p1 = Process(target=cpy_src)
     p1.start()
+    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
     time.sleep(0.15)
     main(global_state, global_packet_count)
     #file_manager(global_state)
