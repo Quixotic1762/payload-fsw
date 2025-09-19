@@ -2,108 +2,59 @@
 Author: Ghanit Taunk, Pathik Raythana
 '''
 
-def blenano_proc():
+def nanoble():
     import serial
-    import time
     import csv
     import os
-
     ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
     ser.reset_input_buffer()
 
-    ble_file = '/home/pi5/Documents/nano_ble.csv'
-    volt_file = '/home/pi5/Documents/voltage.csv'
-
-    if not os.path.exists(ble_file):
-        with open(ble_file, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Temperature", "Roll", "Pitch", "Yaw", "Pressure", "Altitude"])
-
-    if not os.path.exists(volt_file):
-        with open(volt_file, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Voltage"])
-            
+    ble_file = blenano_proc_log
+    volt_file = blevsas_log
+    
     with open(ble_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Temperature", "Roll", "Pitch", "Yaw", "Pressure", "Altitude"])
-    with open(volt_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Voltage"])
+        writer = csv.writer(f)
+        writer.writerow([
+            "Timestamp", "Temperature", "Roll", "Pitch", "Yaw",
+            "Pressure", "Altitude", "ax", "ay", "az",
+            "gx", "gy", "gz", "mx", "my", "mz"
+        ])
 
-    def read_function():
-        while True:
-            try:
-                line = ser.readline().decode('utf-8', errors='ignore').strip()
-                if not line:
+    with open(volt_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Timestamp", "Voltage"])
+
+    buffer = ""
+    while True:
+        try:
+            data = ser.read(ser.in_waiting or 1).decode("utf-8", errors="ignore").strip()
+            buffer += data
+
+            while "<" in buffer and ">" in buffer:
+                start = buffer.find("<")
+                end = buffer.find(">", start)
+                if end == -1:
+                    break  
+
+                packet = buffer[start+1:end]  
+                buffer = buffer[end+1:]  
+
+                parts = packet.split(",")
+                if not parts:
                     continue
 
-                if line.startswith("V"):
-                    voltage_value = line[2:]
+                if parts[0] == "V" and len(parts) == 3:
+                    _, ts, volt = parts
                     with open(volt_file, "a", newline="") as vf:
                         writer = csv.writer(vf)
-                        writer.writerow([time.time(), voltage_value])
-                    #print("Voltage:", voltage_value)
+                        writer.writerow([ts, volt])
 
-                elif line.startswith("S"):
-                    sensor_data = line[2:].split(",")
+                elif parts[0] == "S" and len(parts) == 17:
+                    _, *sensor_data = parts
                     with open(ble_file, "a", newline="") as sf:
                         writer = csv.writer(sf)
                         writer.writerow(sensor_data)
-                   # print("Sensor:", sensor_data)
-                    #q.put(sensor_data)
 
-            except Exception as e:
-                print("Error reading serial data:", e)
-
-    read_function()
-
-    '''
-    def blenano_proc():
-        import serial
-        import time
-        import csv
-        import os
-
-        ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
-        ser.reset_input_buffer()
-
-        ble_file = 'proc_files/blenano_proc_log'
-        volt_file = 'proc_files/blevsas_log'
-        ## Changed this part
-        if (os.path.getsize(ble_file) == 0):
-            with open(ble_file, "w", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["Timestamp", "Temperature", "Roll", "Pitch", "Yaw", "Pressure", "Altitude"])
-        ## Changed this part
-        if (os.path.getsize(volt_file) == 0):
-            with open(volt_file, "w", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["Timestamp", "Voltage"])
-
-        def read_function():
-            while True:
-                try:
-                    line = ser.readline().decode('utf-8', errors='ignore').strip()
-                    if not line:
-                        continue
-                    if line.startswith("V"):
-                        voltage_value = line[2:]
-                        with open(volt_file, "a", newline="") as vf:
-                            writer = csv.writer(vf)
-                            writer.writerow([voltage_value])
-                        #print("Voltage:", voltage_value)
-
-                    elif line.startswith("S"):
-                        sensor_data = line[2:].split(",")
-                        with open(ble_file, "a", newline="") as sf:
-                            writer = csv.writer(sf)
-                            writer.writerow(sensor_data)
-                        #print("Sensor:", sensor_data)
-
-                except Exception as e:
-                    print("Error reading serial data:", e)
-
-        read_function()
-
-    '''
+        except Exception as e:
+            print("Error reading serial data:", e)
+            # sys.exit(return code)

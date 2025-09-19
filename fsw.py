@@ -75,8 +75,10 @@ def main(global_state, global_packet_count):
     recovery =  4
 
     #gnss_proc = Process(target=gnss_proc)
-    #blenano_proc = Process(target=blenano_proc)
+    blenano_proc = Process(target=blenano_proc)
     #ackrf_proc = Process(target=hackrf_proc)
+    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
+    blenano_proc.start()
     
     while True:
         time.sleep(0.1)
@@ -88,12 +90,12 @@ def main(global_state, global_packet_count):
 
             if (state_restore == 0):
                 state = global_state.value
-                lora_proc.start()
+                #lora_proc.start()
                 tx_enable.set()
             
             if (state_restore == 1):
                 global_state.value = idle
-                lora_proc.start()
+                #lora_proc.start()
                 state = global_state.value
 
             telemetry_log_fd = open(telemetry_log, "a", newline="")
@@ -553,15 +555,14 @@ def gnss_proc():
                 writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
 
 def blenano_proc():
-    import csv
     import serial
-
+    import csv
+    import os
     ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
     ser.reset_input_buffer()
 
-    ble_file = blenano_proc
+    ble_file = blenano_proc_log
     volt_file = blevsas_log
-
     
     with open(ble_file, "w", newline="") as f:
         writer = csv.writer(f)
@@ -575,30 +576,36 @@ def blenano_proc():
         writer = csv.writer(f)
         writer.writerow(["Timestamp", "Voltage"])
 
+    buffer = ""
     while True:
         try:
-            line = ser.readline().decode("utf-8", errors="ignore").strip()
-            if not line:
-                continue
+            data = ser.read(ser.in_waiting or 1).decode("utf-8", errors="ignore").strip()
+            buffer += data
 
-            # Voltage
-            if line.startswith("<V,") and line.endswith(">"):
-                parts = line[1:-1].split(",")
-                if len(parts) == 3:
+            while "<" in buffer and ">" in buffer:
+                start = buffer.find("<")
+                end = buffer.find(">", start)
+                if end == -1:
+                    break  
+
+                packet = buffer[start+1:end]  
+                buffer = buffer[end+1:]  
+
+                parts = packet.split(",")
+                if not parts:
+                    continue
+
+                if parts[0] == "V" and len(parts) == 3:
                     _, ts, volt = parts
                     with open(volt_file, "a", newline="") as vf:
                         writer = csv.writer(vf)
                         writer.writerow([ts, volt])
 
-            # Sensor
-            elif line.startswith("<S,") and line.endswith(">"):
-                parts = line[1:-1].split(",")
-                if len(parts) == 17:  
+                elif parts[0] == "S" and len(parts) == 17:
                     _, *sensor_data = parts
                     with open(ble_file, "a", newline="") as sf:
                         writer = csv.writer(sf)
                         writer.writerow(sensor_data)
-                    #print("Sensor:", sensor_data)
 
         except Exception as e:
             print("Error reading serial data:", e)
@@ -615,12 +622,6 @@ if __name__ == '__main__':
     tx_enable = Event()
     p1 = Process(target=cpy_src)
     p1.start()
-    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
     time.sleep(0.15)
+
     main(global_state, global_packet_count)
-    #file_manager(global_state)
-    #print(telemetry_log)
-    #telm = generate_telemetry(global_packet_count, global_state)
-    #print(telm, end="")
-    #print(global_state.value)
-    #main(state)+
