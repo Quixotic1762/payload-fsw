@@ -71,13 +71,6 @@ class recovery_change_parameters():
     flag_sum = 0
     change_state = False
 
-
-#ascent_conditions = state_change_parameters()
-
-#descent_change = state_change_parameters()
-
-#recovery_change = state_change_parameters()
-
 state_change = state_change_parameters()
 
 recovery_change = recovery_change_parameters()
