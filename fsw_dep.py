@@ -213,4 +213,4 @@ def blenano_proc():
 
 def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
-    return line.decode()
+    return line.decode().split('\n')[0]
