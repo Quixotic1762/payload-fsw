@@ -14,8 +14,8 @@ float gx, gy, gz, ax, ay, az, mx, my, mz;
 float roll, pitch, yaw;
 float pressure, voltage;
 float pitchMapped, rollMapped;
-float temperature = 29.00;
-float altitude = 600;
+float temperature = 28.00;
+float altitude = 10;
 
 int servopin1 = 3;
 int servopin2 = 5;
@@ -53,12 +53,11 @@ void loop() {
   int sensorValue = analogRead(A7);
   voltage = (sensorValue / 4095.0) * 6.6;
 
-
   char vBuf[20];
   snprintf(vBuf, sizeof(vBuf), "<V,%lu,%.4f>", currentMillis, voltage);
   Serial1.println(vBuf);
   
-  if (millis() - lastSensorMillis >= 300) {
+  if (millis() - lastSensorMillis >= 50) {
     lastSensorMillis = millis();
     float dt = (currentMillis - previousMillis) / 1000.0;
 

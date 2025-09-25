@@ -49,13 +49,15 @@ def main(global_state, global_packet_count):
     ascent   =  2
     descent  =  3
     recovery =  4
-
+    global blenano_proc
+    global lora
     #gnss_proc = Process(target=gnss_proc)
-    #blenano_proc = Process(target=blenano_proc)
+    blenano_proc = Process(target=blenano_proc)
     #ackrf_proc = Process(target=hackrf_proc)
-    #lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
-    #blenano_proc.start()
+    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
     
+    blenano_proc.start()
+    lora_proc.start()
     while True:
         time.sleep(0.1)
         state = global_state.value
@@ -84,18 +86,13 @@ def main(global_state, global_packet_count):
             
             telm_string = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string)
+            ''''
+            Wait for ACK then send a telemetry string.
             '''
             if not tx_enable.is_set():
                 tx_enable.wait()
-            '''
+            
             telm_q.put(telm_string)
-            ''''
-            --> Wait for Ack -> Start Transmiting Telemetry Stringacceleration
-            LoRa_proc is running in recieve mode:
-                two options -> wait for ACK
-                            -> create some kind of signal using os/multiprocessing.event
-            '''
-
             '''
             state change parameter from ascent to descent V, A, H must change for more than 3.
             '''
