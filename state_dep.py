@@ -40,8 +40,11 @@ def idle_to_ascent_change():
     delta_time = current_check_time - state_change.last_check
     delta_altitude = current_altitude - state_change.last_altitude
     delta_acceleration = current_acceleration - state_change.last_acceleration
-
-    if delta_time < 2:
+    #print(f"Delta time = {delta_time}")
+#
+    #print(f"Delta alt = {delta_altitude} current alt: {current_altitude} last alt: {state_change.last_altitude} ")
+    #print(f"Delta acc = {delta_acceleration} current acc: {current_acceleration} last acc: {state_change.last_acceleration} ")
+    if delta_time < 0.5:
         if delta_altitude > 0:
             state_change.altitude_flag[0] = 1
         else:
@@ -57,8 +60,12 @@ def idle_to_ascent_change():
         else:
             state_change.min_altitude_flag = 0
     else:
+        #print(f"altitude flags: {state_change.altitude_flag}")
+
         if (state_change.altitude_flag[1] == 0):
             state_change.flag_sum += state_change.altitude_flag[0]
+        
+        #print(f"acceleration flags: {state_change.acceleration_flag}")
 
         if (state_change.acceleration_flag[1] == 0):
             state_change.flag_sum += state_change. acceleration_flag[0]

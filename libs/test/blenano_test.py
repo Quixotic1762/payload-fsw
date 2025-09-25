@@ -9,8 +9,8 @@ def nanoble():
     ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
     ser.reset_input_buffer()
 
-    ble_file = 'blenano_proc_log'
-    volt_file = 'blevsas_log'
+    ble_file = 'test_logs/blenano_proc_log'
+    volt_file = 'test_logs/blevsas_log'
     
     with open(ble_file, "w", newline="") as f:
         writer = csv.writer(f)
@@ -48,13 +48,16 @@ def nanoble():
                     with open(volt_file, "a", newline="") as vf:
                         writer = csv.writer(vf)
                         writer.writerow([ts, volt])
+                        print(f"{ts}, {volt}")
 
                 elif parts[0] == "S" and len(parts) == 17:
                     _, *sensor_data = parts
                     with open(ble_file, "a", newline="") as sf:
                         writer = csv.writer(sf)
                         writer.writerow(sensor_data)
-
+                        print(f"{sensor_data}")
+00000000000000  
         except Exception as e:
             print("Error reading serial data:", e)
             # sys.exit(return code)
+nanoble()

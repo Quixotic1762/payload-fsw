@@ -1,0 +1,1022 @@
+Boot state
+Idle state
+Delta time = 1758622501.799243
+Delta alt = 600.0 current alt: 600.0 last alt: 0 
+Delta acc = 0.98 current acc: 0.98 last acc: 0 
+altitude flags: [0, 0]
+acceleration flags: [0, 0]
+flag sum: 0
+Idle state
+Delta time = 0.10333037376403809
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.010000000000000009 current acc: 0.97 last acc: 0.98 
+Idle state
+Delta time = 0.20601963996887207
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.020000000000000018 current acc: 0.99 last acc: 0.97 
+Idle state
+Delta time = 0.30923962593078613
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.020000000000000018 current acc: 0.97 last acc: 0.99 
+Idle state
+Delta time = 0.41225600242614746
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.010000000000000009 current acc: 0.98 last acc: 0.97 
+Idle state
+Delta time = 0.5151503086090088
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 2]
+flag sum: 1
+Idle state
+Delta time = 0.10271978378295898
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20539569854736328
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3080625534057617
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4107663631439209
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.513819694519043
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10280752182006836
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20577239990234375
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3085615634918213
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41134119033813477
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5142297744750977
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10262393951416016
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20575642585754395
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3083949089050293
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4108741283416748
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5135881900787354
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10268449783325195
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20566034317016602
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.30851149559020996
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4111502170562744
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5140352249145508
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10246515274047852
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2052171230316162
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.30776214599609375
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4126322269439697
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5163345336914062
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10325837135314941
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20688605308532715
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31037187576293945
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4142603874206543
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.517979621887207
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10371589660644531
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2077159881591797
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31156229972839355
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4156529903411865
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5193655490875244
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.1035003662109375
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20723295211791992
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31081104278564453
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4145035743713379
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5182716846466064
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10376739501953125
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20734953880310059
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31075453758239746
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4143338203430176
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5179052352905273
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10382819175720215
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2076711654663086
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31133079528808594
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.415024995803833
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5188448429107666
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10387969017028809
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20766353607177734
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3117520809173584
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41545820236206055
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5192615985870361
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10368704795837402
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20729923248291016
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.010000000000000009 current acc: 0.97 last acc: 0.98 
+Idle state
+Delta time = 0.3117527961730957
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.010000000000000009 current acc: 0.98 last acc: 0.97 
+Idle state
+Delta time = 0.41518139839172363
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5186691284179688
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 3]
+flag sum: 1
+Idle state
+Delta time = 0.10376787185668945
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2077627182006836
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.31160879135131836
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4157135486602783
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5192763805389404
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10374069213867188
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20732498168945312
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3110933303833008
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4147970676422119
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5183746814727783
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10390305519104004
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2076737880706787
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3117184638977051
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4154086112976074
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.519341230392456
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10360574722290039
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.206986665725708
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3106570243835449
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4141843318939209
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5179557800292969
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10395455360412598
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20755314826965332
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3113408088684082
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4148240089416504
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5184803009033203
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10347676277160645
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2072758674621582
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3109900951385498
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41464734077453613
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5202932357788086
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10336494445800781
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2064208984375
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.30927562713623047
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4118001461029053
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.514458417892456
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10253548622131348
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.2052595615386963
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.30785632133483887
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41063523292541504
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5134198665618896
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10267257690429688
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20549607276916504
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3080589771270752
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41072559356689453
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5135822296142578
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10251998901367188
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20536160469055176
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3078920841217041
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.4104299545288086
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5131304264068604
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10265970230102539
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.20559430122375488
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.3080008029937744
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.41156673431396484
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+Idle state
+Delta time = 0.5141074657440186
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.0 current acc: 0.98 last acc: 0.98 
+altitude flags: [0, 4]
+acceleration flags: [1, 4]
+flag sum: 1
+Idle state
+Delta time = 0.10279679298400879
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.010000000000000009 current acc: 0.99 last acc: 0.98 
+Idle state
+Delta time = 0.20551252365112305
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.010000000000000009 current acc: 0.98 last acc: 0.99 
+Idle state
+Delta time = 0.30799388885498047
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.010000000000000009 current acc: 0.97 last acc: 0.98 
+Idle state
+Delta time = 0.4108760356903076
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.14000000000000012 current acc: 1.11 last acc: 0.97 
+Idle state
+Delta time = 0.5136730670928955
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.10999999999999988 current acc: 1.22 last acc: 1.11 
+altitude flags: [0, 4]
+acceleration flags: [1, 2]
+flag sum: 1
+Idle state
+Delta time = 0.10247969627380371
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.1399999999999999 current acc: 1.08 last acc: 1.22 
+Idle state
+Delta time = 0.2054762840270996
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.040000000000000036 current acc: 1.04 last acc: 1.08 
+Idle state
+Delta time = 0.30799317359924316
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.18000000000000005 current acc: 0.86 last acc: 1.04 
+Idle state
+Delta time = 0.41068196296691895
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.07999999999999996 current acc: 0.94 last acc: 0.86 
+Idle state
+Delta time = 0.5132319927215576
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.24 current acc: 0.7 last acc: 0.94 
+altitude flags: [0, 4]
+acceleration flags: [1, 3]
+flag sum: 1
+Idle state
+Delta time = 0.10241246223449707
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.17000000000000004 current acc: 0.87 last acc: 0.7 
+Idle state
+Delta time = 0.20511603355407715
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.010000000000000009 current acc: 0.88 last acc: 0.87 
+Idle state
+Delta time = 0.30773305892944336
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.08999999999999997 current acc: 0.97 last acc: 0.88 
+Idle state
+Delta time = 0.4103355407714844
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = 0.09000000000000008 current acc: 1.06 last acc: 0.97 
+Idle state
+Delta time = 0.5127658843994141
+Delta alt = 0.0 current alt: 600.0 last alt: 600.0 
+Delta acc = -0.13 current acc: 0.93 last acc: 1.06 
+altitude flags: [0, 4]
+acceleration flags: [1, 0]
+flag sum: 2
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state
+ascent state

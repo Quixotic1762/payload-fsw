@@ -7,43 +7,50 @@ hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'proc_files/telemetry_log'
 
 def lora(telm_q, tx_enable):
+    """    
+    Connections:
+    - GPIO4 (pin 7)   -> RESET
+    - GPIO17 (pin 11) -> DIO0
+    - GPIO10 (pin 19) -> MOSI
+    - GPIO9 (pin 21)  -> MISO
+    - GPIO11 (pin 23) -> SCK
+    - GPIO8 (pin 24)  -> NSS (CS)
+    - Optional: GPIO23, GPIO24, GPIO25 -> DIO1, DIO2, DIO3
+    """
     import sys
     import time
-    import argparse
     from datetime import datetime
-    import subprocess
-    from lora_rpi5_interface import LoRa
 
-    '''
-    sends telemetry recieved via queue telm_q
-    send_mode(lora, telm_str): sends telm_str
-    '''
-    def send(lora):
-        ''' send msg -> if retval = 1 -> send again'''
-        message = telm_q.get()
-        return lora.send(message.encode())
+    # Import the LoRa class from our main file
+    # Make sure lora_rpi5_interface.py is in the same directory
+    try:
+        from lora_rpi5_interface import LoRa
+    except ImportError as e:
+        print(f"Import error: {e}")
+        sys.exit(1)
 
     def main():
         try:
-            '''
             lora = LoRa(
-                frequency=args.freq,
-                bandwidth=args.bw,
-                spreading_factor=args.sf,
-                coding_rate=args.cr,
-                tx_power=args.power,
-                verbose=args.debug
+                frequency=433.0,
+                bandwidth=500000,
+                spreading_factor=12,
+                coding_rate=5,
+                tx_power=17,
+                verbose=False
             )
-            '''
-            lora = LoRa()
+            #lora = LoRa()
+            counter = 0
             while True:
-                enable = tx_enable.is_set()
-                if (telm_q.qsize() > 0) and enable:
-                    send(lora)
-                        
+                if (telm_q.qsize() > 0 and (tx_enable.is_set())):
+                    message = telm_q.get()
+                    message = f"{message} counter: {counter}"
+                    lora.send(message.encode())
+                    counter += 1
                 payload, rssi = lora.receive(timeout=1000)
                 if payload:
-                    if payload == 'ack':
+                    print(payload.decode('utf-8'))
+                    if payload.decode('utf-8') == 'ack':
                         tx_enable.set()
     
         except Exception as e:
@@ -51,9 +58,7 @@ def lora(telm_q, tx_enable):
         finally:
             if 'lora' in locals():
                 lora.close()
-                # print("LoRa resources released.")
-    
-    #if __name__ == "__main__":
+                print("LoRa resources released.")
     main()
 
 def hackrf_proc():

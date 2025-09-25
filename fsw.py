@@ -41,23 +41,26 @@ blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
 gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
-telemetry_log = 'proc_files/telemetry_log'
+telemetry_log = 'telmetry_logs/telemetry_log'
 
 def main(global_state, global_packet_count):
+    mission_timer_flag = 1
     boot     =  0
     idle     =  1
     ascent   =  2
     descent  =  3
     recovery =  4
 
+    global blenano_proc
+
     #gnss_proc = Process(target=gnss_proc)
-    #blenano_proc = Process(target=blenano_proc)
+    blenano_proc = Process(target=blenano_proc)
     #ackrf_proc = Process(target=hackrf_proc)
-    #lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
-    #blenano_proc.start()
+    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
+    blenano_proc.start()
     
     while True:
-        time.sleep(0.1)
+        time.sleep(1)
         state = global_state.value
 
         if (state == boot):
@@ -66,12 +69,12 @@ def main(global_state, global_packet_count):
 
             if (state_restore == 0):
                 state = global_state.value
-                #lora_proc.start()
-                #x_enable.set()
+                lora_proc.start()
+                tx_enable.set()
             
             if (state_restore == 1):
                 global_state.value = idle
-                #lora_proc.start()
+                lora_proc.start()
                 state = global_state.value
 
             telemetry_log_fd = open(telemetry_log, "a", newline="")
@@ -80,21 +83,23 @@ def main(global_state, global_packet_count):
             print("Idle state")
             global mission_timer_start
             '''' this should happen once and then not again.'''
-            mission_timer_start = time.time()
+            if mission_timer_flag:
+                mission_timer_start = time.time()
+                mission_timer_flag -= 1
             
             telm_string = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string)
-            '''
-            if not tx_enable.is_set():
-                tx_enable.wait()
-            '''
-            telm_q.put(telm_string)
             ''''
             --> Wait for Ack -> Start Transmiting Telemetry Stringacceleration
             LoRa_proc is running in recieve mode:
                 two options -> wait for ACK
                             -> create some kind of signal using os/multiprocessing.event
             '''
+            if not tx_enable.is_set():
+                tx_enable.wait()
+
+            telm_q.put(telm_string)
+            print(telm_string)
 
             '''
             state change parameter from ascent to descent V, A, H must change for more than 3.
@@ -184,6 +189,7 @@ def file_manager(global_state):
 
     last_file = dir_list[-1]
     file_path = f"{working_dir}/{last_file}"
+    telemetry_log = file_path
     
     last_line = getline(file_path)
     last_line_arr = last_line.split(",")
@@ -202,6 +208,7 @@ def file_manager(global_state):
         new_file = '_'.join(new_file_split)
         new_file_path = f"{working_dir}/{new_file}"
         file = open(new_file_path, "w", newline='')
+        file.write("<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<3TEMP>,<4PRESSURE>,<5FREQ>,<6RSSI>,<7ROLL>,<8PITCH>,<9YAW>,<10GNSS_ALT>,<11GNSS_LAT>,<12GNSS_LONG>,<13GNSS_SAT>,<14VOLTAGE>,<15CURRENT>,<16STATE>,<17CHECKSUM>\n")
         file.close()
         telemetry_log = new_file_path
         return 1
@@ -231,7 +238,7 @@ def generate_telemetry(global_packet_count, global_state):
 
     vsas_volt = getline(blevsas_log)
     vsas_volt_list = vsas_volt.split(',')
-    voltage = vsas_volt_list[1]
+    voltage = vsas_volt_list[1][:-1]
 
     hackrf_line = getline(hackrf_log)
     hackrf_arr = hackrf_line.split(',')
@@ -243,9 +250,9 @@ def generate_telemetry(global_packet_count, global_state):
 
     packet_count = global_packet_count.value
 
-    telm_str = f"{team_id}, {mission_time}, {packet_count}, {temp}, {pressure}, {freq}, {rssi}, {roll}, {pitch}, {yaw}, {gnss_alt}, {gnss_lat}, {gnss_long}, {gnss_sat}, {voltage}, {current}, {state}"
+    telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{freq},{rssi},{roll},{pitch},{yaw},{gnss_alt},{gnss_lat},{gnss_long},{gnss_sat},{voltage},{current},{state}"
     checksum = zlib.crc32(telm_str.encode())
-    telm_str = f"{telm_str}, {checksum}\n"
+    telm_str = f"#,{telm_str},{checksum},$\r\n"
 
     return telm_str
 
@@ -261,7 +268,9 @@ if __name__ == '__main__':
     telm_q = Queue()
     tx_enable = Event()
     p1 = Process(target=cpy_src)
-    p1.start()
-    time.sleep(0.15)
+    #p1.start()
+    time.sleep(2)
+    #blenano_proc = Process(target=blenano_proc)
+    #blenano_proc.start()
 
     main(global_state, global_packet_count)

@@ -85,9 +85,9 @@ DIO0_CAD_DONE = 0x80
 class LoRa:
     def __init__(self, 
                  frequency=433.0, 
-                 bandwidth=250000, 
+                 bandwidth=500000, 
                  coding_rate=5, 
-                 spreading_factor=9, 
+                 spreading_factor=12, 
                  tx_power=17,
                  verbose=False):
         
@@ -142,7 +142,7 @@ class LoRa:
         self.write_register(REG_MODEM_CONFIG_3, 0x04)
         
         # Set output power
-        self.set_tx_power(tx_power)
+        self.set_tx_power(tx_power,1)
         
         # Configure modem
         self.set_bandwidth(bandwidth)
