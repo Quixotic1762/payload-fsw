@@ -52,15 +52,16 @@ def main(global_state, global_packet_count):
     recovery =  4
 
     global blenano_proc
-
+    global hackrf_proc
     #gnss_proc = Process(target=gnss_proc)
     blenano_proc = Process(target=blenano_proc)
-    #ackrf_proc = Process(target=hackrf_proc)
+    hackrf_proc = Process(target=hackrf_proc)
     lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
     blenano_proc.start()
+    hackrf_proc.start()
     
     while True:
-        time.sleep(1)
+        time.sleep(0.05)
         state = global_state.value
 
         if (state == boot):
@@ -99,7 +100,7 @@ def main(global_state, global_packet_count):
                 tx_enable.wait()
 
             telm_q.put(telm_string)
-            print(telm_string)
+            #print(telm_string)
 
             '''
             state change parameter from ascent to descent V, A, H must change for more than 3.
@@ -243,7 +244,7 @@ def generate_telemetry(global_packet_count, global_state):
     hackrf_line = getline(hackrf_log)
     hackrf_arr = hackrf_line.split(',')
     freq = hackrf_arr[1]
-    rssi = hackrf_arr[2]
+    rssi = hackrf_arr[2][:-1]
 
     current = -32 # add code to calculate it 
     state = global_state.value

@@ -34,7 +34,7 @@ def lora(telm_q, tx_enable):
             lora = LoRa(
                 frequency=433.0,
                 bandwidth=500000,
-                spreading_factor=12,
+                spreading_factor=11,
                 coding_rate=5,
                 tx_power=17,
                 verbose=False
@@ -89,7 +89,7 @@ def hackrf_proc():
                             writer.writerow([timestamp, freq_mhz, float(rssi)])
                             file.flush()
                             #print(f"{timestamp} | {freq_mhz:.2f} MHz | {rssi} dBm")
-                        time.sleep(5)
+                        time.sleep(0.1)
 
                     except ValueError:
                         continue
@@ -164,7 +164,7 @@ def blenano_proc():
     import serial
     import csv
     import os
-    ser = serial.Serial('/dev/ttyAMA1', 115200, timeout=1)
+    ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
     ser.reset_input_buffer()
 
     ble_file = "proc_files/blenano_proc_log"

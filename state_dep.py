@@ -41,7 +41,7 @@ def idle_to_ascent_change():
     delta_altitude = current_altitude - state_change.last_altitude
     delta_acceleration = current_acceleration - state_change.last_acceleration
     #print(f"Delta time = {delta_time}")
-#
+
     #print(f"Delta alt = {delta_altitude} current alt: {current_altitude} last alt: {state_change.last_altitude} ")
     #print(f"Delta acc = {delta_acceleration} current acc: {current_acceleration} last acc: {state_change.last_acceleration} ")
     if delta_time < 0.5:
