@@ -43,9 +43,6 @@ gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'telmetry_logs/telemetry_log'
 
-# Phone number to send the sms' to 
-number =  "+919699060432"  # -> ashwin 
-
 def main(global_state, global_packet_count):
     mission_timer_flag = 1
     boot     =  0
@@ -143,6 +140,11 @@ def main(global_state, global_packet_count):
             '''
             check altitude if between 490 and 510 open parachute. 
             '''
+            current_altitude = get_ble_altitude()
+            if (current_altitude < 500):
+                print("trigger servo")
+                ''' tell BLE to trigger the servos.x'''
+            
             telm_string_descent = generate_telemetry(global_packet_count, global_state)
             telemetry_log_fd.write(telm_string_descent)
             '''
@@ -260,6 +262,11 @@ def generate_telemetry(global_packet_count, global_state):
 
     return telm_str
 
+def get_ble_altitude():
+    ble = getline(blenano_proc_log)
+    ble_arr = ble.split(',')
+    current_altitude = float(ble_arr[6])
+    return current_altitude
 '''
 def telecom_parse_proc(telecommand):
 

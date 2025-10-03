@@ -6,6 +6,8 @@ gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'telemetry_logs/telemetry_log'
 
+number = "+919699060432"
+
 def lora(telm_q, tx_enable):
     """    
     Connections:
@@ -318,7 +320,7 @@ def gsm_proc(sms_q):
         if (curr_time - last_transmit) and (sms_q.qsize > 0):
             sms_payload = sms_q.get()
             send_sms(number, sms_payload)
-        time.sleep(0.1)
+        time.sleep(0.01)
 
 
 def getline(proc_fp):

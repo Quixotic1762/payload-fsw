@@ -26,7 +26,7 @@ def gsm_proc(sms_payload):
         time.sleep(5)
 
 '''
-
+number = "+919699060432"
 def gsm_proc(sms_q):
     import serial 
     import time
@@ -54,6 +54,6 @@ def gsm_proc(sms_q):
         if (curr_time - last_transmit) and (sms_q.qsize > 0):
             sms_payload = sms_q.get()
             send_sms(number, sms_payload)
-        time.sleep(5)
+        time.sleep(0.01)
 
     
