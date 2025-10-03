@@ -43,6 +43,9 @@ gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'telmetry_logs/telemetry_log'
 
+# Phone number to send the sms' to 
+number =  "+919699060432"  # -> ashwin 
+
 def main(global_state, global_packet_count):
     mission_timer_flag = 1
     boot     =  0
@@ -53,7 +56,7 @@ def main(global_state, global_packet_count):
 
     global blenano_proc
     global hackrf_proc
-    #gnss_proc = Process(target=gnss_proc)
+    gnss_proc = Process(target=gnss_proc)
     blenano_proc = Process(target=blenano_proc)
     hackrf_proc = Process(target=hackrf_proc)
     lora_proc = Process(target=lora, args=(telm_q,tx_enable,))

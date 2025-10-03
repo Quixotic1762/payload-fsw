@@ -21,11 +21,11 @@ import spidev
 from RPi import GPIO
 
 # Define the pins we're using
-RESET_PIN = 4
-DIO0_PIN = 17
+RESET_PIN = 25
+DIO0_PIN = 22
 DIO1_PIN = 23  # Optional
 DIO2_PIN = 24  # Optional
-DIO3_PIN = 25  # Optional
+DIO3_PIN = 3  # Optional
 CS_PIN = 8     # SPI_CE0
 
 # SX127X Register definitions
@@ -313,9 +313,9 @@ class LoRa:
             
             time.sleep(0.01)  # Small delay to avoid CPU hammering
     
-    def send(self, data, wait=True, timeout=5000):
+    def send(self, data, wait=True, timeout=1000):
         """Send a packet of data"""
-        # Set to standby mode
+        # Set to standby mode   
         self.idle()
         
         # Set DIO0 to map to TxDone
