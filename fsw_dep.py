@@ -1,10 +1,16 @@
 import subprocess
+import serial
 
 blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
 gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'telemetry_logs/telemetry_log'
+
+gsm_serial = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
+gnss_serial = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
+nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
+
 
 def lora(telm_q, tx_enable):
     """    
@@ -160,12 +166,13 @@ def gnss_proc():
                     dec_long = decimal_long(long, long_dir)
                 writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
 
+
 def blenano_proc():
     import serial
     import csv
     import os
-    ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
-    ser.reset_input_buffer()
+
+    nano_serial.reset_input_buffer()
 
     ble_file = "proc_files/blenano_proc_log"
     volt_file = "proc_files/blevsas_log"
@@ -185,7 +192,7 @@ def blenano_proc():
     buffer = ""
     while True:
         try:
-            data = ser.read(ser.in_waiting or 1).decode("utf-8", errors="ignore").strip()
+            data = nano_serial.read(nano_serial.in_waiting or 1).decode("utf-8", errors="ignore").strip()
             buffer += data
 
             while "<" in buffer and ">" in buffer:
@@ -215,12 +222,14 @@ def blenano_proc():
 
         except Exception as e:
             print("Error reading serial data:", e)
+
+
+
 def gnss_proc():
     import serial
     import csv
 
-    ser = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
-    gnss_proc_log = 'test_logs/gnss_proc_log'
+    #gnss_proc_log = 'test_logs/gnss_proc_log'
 
     def decimal(coord, direction):
         if not coord:
@@ -258,7 +267,7 @@ def gnss_proc():
         writer.writerow(["UTC","Latitude","Longitude","No. of Satellites","Altitude"])
         
         while True:
-            raw = ser.readline().decode("utf-8", errors='ignore').strip()
+            raw = gnss_serial.readline().decode("utf-8", errors='ignore').strip()
             #print(raw)
             
             if raw.startswith("$GNGGA"):
@@ -288,22 +297,20 @@ def gnss_proc():
                 writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
                 #print(f"{dec_lat}, {dec_long}, {num_sats},{altitude}")
                 
-gnss_proc()
-
+    gnss_proc()
 
 def gsm_proc(sms_q):
     import serial 
     import time
 
-    ser = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
 
     last_transmit = time.time()
 
     def send_at(command):
         #tr_buffer = (command+'\r\n').encode(encoding="utf-8")
-        ser.write((command+'\r\n').encode())
-        while ser.readline():
-            print(ser.readline().decode('utf-8'))
+        gsm_serial.write((command+'\r\n').encode())
+        while gsm_serial.readline():
+            print(gsm_serial.readline().decode('utf-8'))
     
     def send_sms(number, message):
         send_at("AT+CMGF=1")
@@ -311,7 +318,7 @@ def gsm_proc(sms_q):
         send_at(set_nu)
         msg = message + chr(26)
         msg_bytes = msg.encode()
-        ser.write(msg_bytes)
+        gsm_serial.write(msg_bytes)
     
     while True:
         curr_time = time.time()

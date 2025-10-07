@@ -46,6 +46,15 @@ telemetry_log = 'telmetry_logs/telemetry_log'
 # Phone number to send the sms' to 
 number =  "+919699060432"  # -> ashwin 
 
+#=============================================================
+
+actuate_fins_nano = "1"
+deploy_parachute_nano = "2"
+nano_alive = "3"
+
+#=============================================================
+
+
 def main(global_state, global_packet_count):
     mission_timer_flag = 1
     boot     =  0
@@ -56,12 +65,23 @@ def main(global_state, global_packet_count):
 
     global blenano_proc
     global hackrf_proc
-    gnss_proc = Process(target=gnss_proc)
+
+    sms_q = Queue()
+
     blenano_proc = Process(target=blenano_proc)
+    gnss_proc = Process(target=gnss_proc)
     hackrf_proc = Process(target=hackrf_proc)
     lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
+    gsm_proc = Process(target=gsm_proc, args=(sms_q,))
+    
     blenano_proc.start()
     hackrf_proc.start()
+    lora_proc.start()
+    #gnss_proc.start()
+    #gsm_proc.start()
+
+    parachute_enable = 1
+    fins_flag = 1
     
     while True:
         time.sleep(0.05)
@@ -141,13 +161,31 @@ def main(global_state, global_packet_count):
         if (state == descent):
             print("descent state")
             '''
-            check altitude if between 490 and 510 open parachute. 
-            '''
-            telm_string_descent = generate_telemetry(global_packet_count, global_state)
-            telemetry_log_fd.write(telm_string_descent)
-            '''
             signal ble to actuate fins, uart.
             '''
+            if fins_flag:
+                nano_serial.write(actuate_fins_nano.encode())
+                fins_flag = 0
+   
+            '''
+            check altitude if between 490 and 510 open parachute. 
+            '''
+            ble = getline(blenano_proc_log)
+            ble_arr = ble.split(',')
+            altitude = float(ble_arr[6])
+
+            if (altitude < 510) and parachute_enable:
+                nano_serial.write(deploy_parachute_nano.encode())
+                parachute_enable = 0
+
+            '''
+            check if parachute caused any thing: with the given mechanism it doesnt make muc
+
+            '''
+
+            telm_string_descent = generate_telemetry(global_packet_count, global_state)
+            telemetry_log_fd.write(telm_string_descent)
+            
             '''
             state change parameters: 
                 -> altitude below 10m and constant.
@@ -171,6 +209,7 @@ def main(global_state, global_packet_count):
             gnss_lat = gnss_arr[1]
             gnss_long = gnss_arr[2]
             sms_payload = f"{gnss_lat}, {gnss_long}"
+            sms_q.put(sms_payload)
             '''
             -> transmit sms_payload
             -> Trigger audio beacons
@@ -274,7 +313,5 @@ if __name__ == '__main__':
     p1 = Process(target=cpy_src)
     #p1.start()
     time.sleep(2)
-    #blenano_proc = Process(target=blenano_proc)
-    #blenano_proc.start()
 
     main(global_state, global_packet_count)
