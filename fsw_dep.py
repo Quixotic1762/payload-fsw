@@ -1,7 +1,7 @@
 import subprocess
 import serial
 import time
-import ina219
+import ina219_lib
 
 blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
@@ -342,7 +342,7 @@ def check_rpi_temp():
     return (rpi_temp.decode())
 
 def measure_voltage():
-    ina219 = ina219.INA219(i2c_bus=1,addr=0x43)
+    ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
     bus_voltage = ina219.getBusVoltage_V()
     current = -ina219.getCurrent_mA()
     retlist = [bus_voltage, current]
@@ -366,8 +366,6 @@ def ocp_shutdown(ocp_event):
     # reset arduino 
     # gnss? 
     #
-
-
     
 def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
