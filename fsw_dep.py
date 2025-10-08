@@ -1,5 +1,7 @@
 import subprocess
 import serial
+import time
+import ina219
 
 blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
@@ -10,7 +12,7 @@ telemetry_log = 'telemetry_logs/telemetry_log'
 gsm_serial = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
 gnss_serial = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
 nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
-
+nano_stdout = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 
 def lora(telm_q, tx_enable):
     """    
@@ -327,7 +329,46 @@ def gsm_proc(sms_q):
             send_sms(number, sms_payload)
         time.sleep(0.1)
 
+def check_arduino_health():
+    while True:
+        nano_serial.write(nano_alive.encode())
+        buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
+        if "128" in buffer:
+            print("ACK recieved")
+        time.sleep(5)
 
+def check_rpi_temp():
+    rpi_temp = subprocess.check_output(['vcgencmd', 'measure_temp'])
+    return (rpi_temp.decode())
+
+def measure_voltage():
+    ina219 = ina219.INA219(i2c_bus=1,addr=0x43)
+    bus_voltage = ina219.getBusVoltage_V()
+    current = -ina219.getCurrent_mA()
+    retlist = [bus_voltage, current]
+    return retlist
+
+def health_check(temp_event, voltage_event, ocp_event):
+    while True:
+        rpi_temp = check_rpi_temp()
+        vol_curr = measure_voltage()
+        if (rpi_temp > 80):
+            # set event
+            temp_event.set()
+        if (vol_curr[0] < 3.15):
+            #set event
+            voltage_event.set()
+        if (vol_curr[1] > 3):
+            ocp_event.set()
+        time.sleep(0.5)
+def ocp_shutdown(ocp_event):
+    ocp_event.wait()
+    # reset arduino 
+    # gnss? 
+    #
+
+
+    
 def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
     return line.decode().split('\n')[0]
