@@ -41,7 +41,7 @@ def gnss_proc():
     
     with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
-        writer.writerow(["UTC","Latitude","Longitude","No. of Satellites","Altitude"])
+        writer.writerow(["UTC","Latitude","Longitude","Sats","Altitude"])
         
         while True:
             raw = ser.readline().decode("utf-8", errors='ignore').strip()

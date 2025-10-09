@@ -87,7 +87,7 @@ class LoRa:
                  frequency=433.0, 
                  bandwidth=500000, 
                  coding_rate=5, 
-                 spreading_factor=12, 
+                 spreading_factor=11, 
                  tx_power=17,
                  verbose=False):
         
@@ -189,7 +189,7 @@ class LoRa:
         self.write_register(REG_FRF_MID, (freq >> 8) & 0xFF)
         self.write_register(REG_FRF_LSB, freq & 0xFF)
     
-    def set_tx_power(self, level, outputPin=0):
+    def set_tx_power(self, level, outputPin=1):
         """Set transmit power level"""
         if outputPin == 0:  # RFO pin
             # Limit between 0 and 14 dBm
@@ -399,4 +399,3 @@ if __name__ == "__main__":
         print(f"Error: {e}")
         if 'lora' in locals():
             lora.close()
-

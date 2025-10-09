@@ -52,9 +52,9 @@ def lora(telm_q, tx_enable):
             while True:
                 if (telm_q.qsize() > 0 and (tx_enable.is_set())):
                     message = telm_q.get()
-                    message = f"{message} counter: {counter}"
+                    message = f"{message}"
                     lora.send(message.encode())
-                    counter += 1
+                    print(message)
                 payload, rssi = lora.receive(timeout=1000)
                 if payload:
                     print(payload.decode('utf-8'))
@@ -305,7 +305,6 @@ def gsm_proc(sms_q):
     import serial 
     import time
 
-
     last_transmit = time.time()
 
     def send_at(command):
@@ -341,17 +340,20 @@ def check_rpi_temp():
     rpi_temp = subprocess.check_output(['vcgencmd', 'measure_temp'])
     return (rpi_temp.decode())
 
-def measure_voltage():
+def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
     ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
-    bus_voltage = ina219.getBusVoltage_V()
-    current = -ina219.getCurrent_mA()
-    retlist = [bus_voltage, current]
-    return retlist
+    while True:
+        with electrical_health_lock:
+            voltage_shared.value = ina219.getBusVoltage_V()
+            current_shared.value = -ina219.getCurrent_mA()
+        time.sleep(0.2)
 
-def health_check(temp_event, voltage_event, ocp_event):
+def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_shared, electrical_health_lock):
+    vol_curr = 0
     while True:
         rpi_temp = check_rpi_temp()
-        vol_curr = measure_voltage()
+        with electrical_health_lock:
+            vol_curr = [voltage_shared.value, current_shared]
         if (rpi_temp > 80):
             # set event
             temp_event.set()
@@ -361,6 +363,7 @@ def health_check(temp_event, voltage_event, ocp_event):
         if (vol_curr[1] > 3):
             ocp_event.set()
         time.sleep(0.5)
+
 def ocp_shutdown(ocp_event):
     ocp_event.wait()
     # reset arduino 
