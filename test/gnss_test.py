@@ -72,6 +72,6 @@ def gnss_proc():
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
                 writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
-                #print(f"{dec_lat}, {dec_long}, {num_sats},{altitude}")
+                print(f"Lat: {dec_lat}, Long: {dec_long}, Sat: {num_sats}, Alt: {altitude}")
                 
 gnss_proc()

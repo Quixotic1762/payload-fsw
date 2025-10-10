@@ -44,7 +44,7 @@ def blenano_proc():
                     with open(volt_file, "a", newline="") as vf:
                         writer = csv.writer(vf)
                         writer.writerow([ts, volt])
-                        print(ts, volt)
+                       # print(ts, volt)
 
                 elif parts[0] == "S" and len(parts) == 17:
                     _, *sensor_data = parts

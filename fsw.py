@@ -25,6 +25,9 @@ import time
 import zlib
 from state_dep import *
 from fsw_dep import *
+import signal
+import sys
+
 
 mission_timer_start = 0
 
@@ -67,18 +70,20 @@ def main(global_state, global_packet_count):
     global gnss_proc
     global gsm_proc
 
+    global tx_enable
+
     sms_q = Queue()
 
     blenano_proc = Process(target=blenano_proc)
     gnss_proc = Process(target=gnss_proc)
     hackrf_proc = Process(target=hackrf_proc)
-    lora_proc = Process(target=lora, args=(telm_q,tx_enable,))
+    lora_proc = Process(target=lora, args=(telm_q,tx_enable,global_packet_count,))
     gsm_proc = Process(target=gsm_proc, args=(sms_q,))
     
     blenano_proc.start()
     hackrf_proc.start()
     #lora_proc.start()
-    #gnss_proc.start()
+    gnss_proc.start()
     #gsm_proc.start()
 
     parachute_enable = 1
@@ -87,10 +92,11 @@ def main(global_state, global_packet_count):
     while True:
         time.sleep(0.05)
         state = global_state.value
+        e_flag = ((1*arduino_flag.is_set()) + (2*temp_event.is_set()))
 
         if (state == boot):
             print("Boot state")
-            state_restore = file_manager(global_state)
+            state_restore = file_manager(global_state, tx_enable)
 
             if (state_restore == 0):
                 state = global_state.value
@@ -112,17 +118,18 @@ def main(global_state, global_packet_count):
                 mission_timer_start = time.time()
                 mission_timer_flag -= 1
             
-            telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable)
+            telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string)
             ''''
             --> Wait for Ack -> Start Transmiting Telemetry Stringacceleration
             LoRa_proc is running in recieve mode:
                 two options -> wait for ACK
-                            -> create some kind of signal using os/multiprocessing.event
+                            -> create some kind of signal using os/multipr000000000000000000000000000000000000ocessing.event
             '''
             if not tx_enable.is_set():
                 tx_enable.wait()
-
+                print(tx_enable.is_set())
+            
             telm_q.put(telm_string)
             #print(telm_string)
 
@@ -178,16 +185,15 @@ def main(global_state, global_packet_count):
             if (altitude < 510) and parachute_enable:
                 nano_serial.write(deploy_parachute_nano.encode())
                 parachute_enable = 0
-
             '''
             check if parachute caused any thing: with the given mechanism it doesnt make muc
 
+            '''
             '''
 
             telm_string_descent = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable)
             telemetry_log_fd.write(telm_string_descent)
             
-            '''
             state change parameters: 
                 -> altitude below 10m and constant.
                 -> velocity is zero
@@ -224,9 +230,10 @@ def cpy_src():
         ble_fd.flush()
         time.sleep(0.05)
 
-def file_manager(global_state):
+def file_manager(global_state, tx_enable):
     global state
     global telemetry_log
+
     working_dir = os.getcwd()
     working_dir = f"{working_dir}/telemetry_logs"
     dir_list = sorted(os.listdir('telemetry_logs/'))
@@ -238,6 +245,8 @@ def file_manager(global_state):
     last_line = getline(file_path)
     last_line = last_line[0:-1]
     last_line_arr = last_line.split(",")
+    tx_enable_status = last_line_arr[-1][0]
+    print(f"tx_enable_status: {tx_enable_status}")
 
     try:
         current_state = [key for key, val in state.items() if val == last_line_arr[17]][0]
@@ -253,13 +262,16 @@ def file_manager(global_state):
         new_file = '_'.join(new_file_split)
         new_file_path = f"{working_dir}/{new_file}"
         file = open(new_file_path, "w", newline='')
-        file.write("#<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,<LORA_RSSI>,<ERROR_FLAGS>,<CHECKSUM>,<ACK>$\n")
+        file.write("#<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,<ERROR_FLAGS>,<CHECKSUM>,<ACK>$\n")
         file.close()
         telemetry_log = new_file_path
         return 1
     
     global_state.value = current_state
     telemetry_log = file_path
+    if tx_enable_status:
+            print("tx.set")
+            tx_enable.set()
     return 0
 
 '''
@@ -269,7 +281,7 @@ nanoble = "Timestamp", "Temperature", "Roll", "Pitch", "Yaw",
             "gx", "gy", "gz", "mx", "my", "mz"
 #<TEAM_ID> <MISSION_TIME> <PACKET_COUNT> <BLE_TEMP><BLE_PRESSURE> <BLE_ALT> <HACKRF_FREQ> <HACKRF_RSSI> <AX> <AY> <AZ> <GX> <GY> <GZ> <MX><MY><MZ> <SOFTWARE_STATE> <GNSS_LAT> <GNSS_LONG> <GNSS_ALT> <GNSS_TIME> <GNSS_SATS> <VOLTAGE> <CURRENT> <RPI_TEMP> <LORA_RSSI><ERROR_FLAGS><CHECKSUM><ACK>$\r\n
 '''
-def generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable): # Try without Lock , if issues then try Lock
+def generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag):
     team_id = 'ASI-ROCKETRY-050'
     mission_time = int(time.time() - mission_timer_start)
 
@@ -287,11 +299,19 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
 
     gnss = getline(gnss_proc_log)
     gnss_arr = gnss.split(',')
-    gnss_time = gnss_arr[0]
-    gnss_lat = gnss_arr[1]
-    gnss_long = gnss_arr[2]
-    gnss_sat = gnss_arr[3]
-    gnss_alt = gnss_arr[4][:-1]
+    try:
+        gnss_time = gnss_arr[0]
+        gnss_lat = gnss_arr[1]
+        gnss_long = gnss_arr[2]
+        gnss_sat = gnss_arr[3]
+        gnss_alt = gnss_arr[4][:-1]
+    except IndexError:
+        gnss_time = 0 
+        gnss_lat = 0
+        gnss_long = 0 
+        gnss_sat = 0
+        gnss_alt = 0
+
 
     vsas_volt = getline(blevsas_log)
     vsas_volt_list = vsas_volt.split(',')
@@ -307,28 +327,36 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     state = global_state.value
 
     rpi_temperature = check_rpi_temp()
-    rpi_temperature = rpi_temperature[:-1]
-    rpi_temperature = rpi_temperature.split('=')[1][:-2]
     
-    error_flags = int(202)
+    error_flags = e_flag
 
-    ack = tx_enable.is_set()
+    ack = int(tx_enable.is_set())
 
     packet_count = global_packet_count.value
+    global_packet_count.value += 1
 
-    telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{ble_alt},{freq},{rssi},{ax},{ay},{az},{gx},{gy},{gz},{mx},{my},{mz},{state},{gnss_lat},{gnss_long},{gnss_alt},{gnss_time},{gnss_sat},{voltage},{current},{rpi_temperature},lora_rssi,{error_flags}"
+    telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{ble_alt},{freq},{rssi},{ax},{ay},{az},{gx},{gy},{gz},{mx},{my},{mz},{state},{gnss_lat},{gnss_long},{gnss_alt},{gnss_time},{gnss_sat},{voltage},{current},{rpi_temperature},{error_flags}"
     checksum = zlib.crc32(telm_str.encode())
-    telm_str = f"#,{telm_str},{checksum},{ack},$\r\n"
+    telm_str = f"#,{telm_str},{checksum},{ack}$\r\n"
 
     return telm_str
 '''
 #<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,<LORA_RSSI>,<ERROR_FLAGS>,<CHECKSUM>,<ACK>$
 '''
 
-
 '''
 def telecom_parse_proc(telecommand):
 '''
+def signal_handler(signum, frame):
+    print(f"{signum} recieved")
+    global lora_proc
+    blenano_proc.terminate()
+    hackrf_proc.terminate()
+    lora_proc.terminate()
+    #gnss_proc.start()
+    #gsm_proc.start()
+    sys.exit()
+
 
 if __name__ == '__main__':
     global_state = Value("i", 0)
@@ -337,12 +365,19 @@ if __name__ == '__main__':
     tx_enable = Event()
     temp_event = Event()
     voltage_event = Event()
+    arduino_flag = Event()
+    parachute_deploy = Event()
+
     current_shared = Value('f', 0.0) 
     voltage_shared = Value('f', 0.0)
     electrical_health_lock = Lock()
 
     p1 = Process(target=cpy_src)
+    #signal.signal(signal.SIGINT, signal_handler)
+    #signal.signal(signal.SIGTERM, signal_handler)
+
     #p1.start()
-    time.sleep(1)
+    time.sleep(2)
     
+
     main(global_state, global_packet_count)

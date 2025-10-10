@@ -23,10 +23,10 @@ from RPi import GPIO
 # Define the pins we're using
 RESET_PIN = 25
 DIO0_PIN = 22
-DIO1_PIN = 23  # Optional
-DIO2_PIN = 24  # Optional
-DIO3_PIN = 3  # Optional
-CS_PIN = 8     # SPI_CE0
+DIO1_PIN = 23
+DIO2_PIN = 24
+#DIO3_PIN = 25
+CS_PIN = 8  # SPI_CE0
 
 # SX127X Register definitions
 REG_FIFO = 0x00
@@ -85,7 +85,7 @@ DIO0_CAD_DONE = 0x80
 class LoRa:
     def __init__(self, 
                  frequency=433.0, 
-                 bandwidth=500000, 
+                 bandwidth=500000,
                  coding_rate=5, 
                  spreading_factor=11, 
                  tx_power=17,
@@ -104,7 +104,7 @@ class LoRa:
         # Optional DIO pins
         GPIO.setup(DIO1_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(DIO2_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(DIO3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        #GPIO.setup(DIO3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         
         # Setup SPI
         try:

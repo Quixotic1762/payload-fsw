@@ -14,7 +14,7 @@ gnss_serial = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
 nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
 nano_stdout = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 
-def lora(telm_q, tx_enable):
+def lora(telm_q, tx_enable,global_packet_count):
     """    
     Connections:
     - GPIO4 (pin 7)   -> RESET
@@ -55,10 +55,11 @@ def lora(telm_q, tx_enable):
                     message = f"{message}"
                     lora.send(message.encode())
                     print(message)
-                payload, rssi = lora.receive(timeout=1000)
+                payload, rssi = lora.receive(timeout=100)
                 if payload:
+                    print(payload)
                     print(payload.decode('utf-8'))
-                    if payload.decode('utf-8') == 'ack':
+                    if payload.decode('utf-8') == '1':
                         tx_enable.set()
     
         except Exception as e:
@@ -82,7 +83,7 @@ def hackrf_proc():
 
             process = subprocess.Popen(["hackrf_sweep", "-f", "700:2700"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-            for line in process.stdout:
+            for line in process.stdout: 
                 parts = line.strip().split(",")
                 if len(parts) >= 7: 
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -96,7 +97,7 @@ def hackrf_proc():
                             freq_mhz = (hz_low + i * bin_width) / 1e6
                             writer.writerow([timestamp, freq_mhz, float(rssi)])
                             file.flush()
-                            #print(f"{timestamp} | {freq_mhz:.2f} MHz | {rssi} dBm")
+                            #print(f"{timestamp} | {freq_mhz:.2f} MHz | {rssi} dBm")0000000000000000000
                         time.sleep(0.1)
 
                     except ValueError:
@@ -204,7 +205,7 @@ def blenano_proc():
                     break  
 
                 packet = buffer[start+1:end]  
-                buffer = buffer[end+1:]  
+                buffer = buffer[end+1:]
 
                 parts = packet.split(",")
                 if not parts:
@@ -262,7 +263,6 @@ def gnss_proc():
     #print(decimal)
 
     altitude = None
-    
     
     with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
@@ -328,17 +328,21 @@ def gsm_proc(sms_q):
             send_sms(number, sms_payload)
         time.sleep(0.1)
 
-def check_arduino_health():
+def check_arduino_health(arduino_flag):
     while True:
         nano_serial.write(nano_alive.encode())
         buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
         if "128" in buffer:
             print("ACK recieved")
-        time.sleep(5)
+            arduino_flag.set()
+        time.sleep(2)
 
 def check_rpi_temp():
     rpi_temp = subprocess.check_output(['vcgencmd', 'measure_temp'])
-    return (rpi_temp.decode())
+    rpi_temp = rpi_temp.decode()
+    rpi_temp = rpi_temp[:-1]
+    rpi_temp = rpi_temp.split('=')[1][:-2]
+    return (rpi_temp)
 
 def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
     ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
@@ -353,8 +357,8 @@ def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_s
     while True:
         rpi_temp = check_rpi_temp()
         with electrical_health_lock:
-            vol_curr = [voltage_shared.value, current_shared]
-        if (rpi_temp > 80):
+            vol_curr = [voltage_shared.value, current_shared.value]
+        if (rpi_temp > 90):
             # set event
             temp_event.set()
         if (vol_curr[0] < 3.15):
