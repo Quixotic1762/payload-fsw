@@ -79,18 +79,19 @@ def main(global_state, global_packet_count):
     hackrf_proc = Process(target=hackrf_proc)
     lora_proc = Process(target=lora, args=(telm_q,tx_enable,global_packet_count,))
     gsm_proc = Process(target=gsm_proc, args=(sms_q,))
-    
+    measure_voltage_proc = Process(target=measure_voltage, args=(current_shared, voltage_shared, electrical_health_lock,))
     blenano_proc.start()
     hackrf_proc.start()
     #lora_proc.start()
     gnss_proc.start()
+    measure_voltage_proc.start()
     #gsm_proc.start()
 
     parachute_enable = 1
     fins_flag = 1
     
     while True:
-        time.sleep(0.05)
+        time.sleep(0.1)
         state = global_state.value
         e_flag = ((1*arduino_flag.is_set()) + (2*temp_event.is_set()))
 
@@ -282,7 +283,7 @@ nanoble = "Timestamp", "Temperature", "Roll", "Pitch", "Yaw",
 #<TEAM_ID> <MISSION_TIME> <PACKET_COUNT> <BLE_TEMP><BLE_PRESSURE> <BLE_ALT> <HACKRF_FREQ> <HACKRF_RSSI> <AX> <AY> <AZ> <GX> <GY> <GZ> <MX><MY><MZ> <SOFTWARE_STATE> <GNSS_LAT> <GNSS_LONG> <GNSS_ALT> <GNSS_TIME> <GNSS_SATS> <VOLTAGE> <CURRENT> <RPI_TEMP> <LORA_RSSI><ERROR_FLAGS><CHECKSUM><ACK>$\r\n
 '''
 def generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag):
-    team_id = 'ASI-ROCKETRY-050'
+    team_id = '050'
     mission_time = int(time.time() - mission_timer_start)
 
     ble = getline(blenano_proc_log)
@@ -298,19 +299,23 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     mx, my, mz = ble_arr[13], ble_arr[14], ble_arr[15][:-1]
 
     gnss = getline(gnss_proc_log)
-    gnss_arr = gnss.split(',')
+    gnss_arr = gnss.split(',')    
+    
     try:
+        gnss_arr = gnss.split(',')
         gnss_time = gnss_arr[0]
         gnss_lat = gnss_arr[1]
         gnss_long = gnss_arr[2]
         gnss_sat = gnss_arr[3]
         gnss_alt = gnss_arr[4][:-1]
+        
     except IndexError:
         gnss_time = 0 
         gnss_lat = 0
         gnss_long = 0 
         gnss_sat = 0
         gnss_alt = 0
+    
 
 
     vsas_volt = getline(blevsas_log)
@@ -335,9 +340,9 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     packet_count = global_packet_count.value
     global_packet_count.value += 1
 
-    telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{ble_alt},{freq},{rssi},{ax},{ay},{az},{gx},{gy},{gz},{mx},{my},{mz},{state},{gnss_lat},{gnss_long},{gnss_alt},{gnss_time},{gnss_sat},{voltage},{current},{rpi_temperature},{error_flags}"
+    telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{ble_alt},{freq},{rssi},{ax},{ay},{az},{gx},{gy},{gz},{mx},{my},{mz},{state},{gnss_lat},{gnss_long},{gnss_alt},{gnss_time},{gnss_sat},{voltage},{current},{rpi_temperature},0,{error_flags}"
     checksum = zlib.crc32(telm_str.encode())
-    telm_str = f"#,{telm_str},{checksum},{ack}$\r\n"
+    telm_str = f"#,{telm_str},00,{ack},$\r\n"
 
     return telm_str
 '''

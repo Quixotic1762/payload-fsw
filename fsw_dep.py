@@ -105,6 +105,9 @@ def hackrf_proc():
 
     run_hackrf_sweep()
 
+'''
+Author: Ashwin Kumar, Ghanit Taunk
+'''
 def gnss_proc():
     import serial
     import csv
@@ -141,24 +144,32 @@ def gnss_proc():
     #print(decimal)
 
     altitude = None
+    num_sats = None
     
-    with open(gnss_proc_log, "a", newline="") as gnss_fd:
+    with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
-        writer.writerow(["UTC", "Latitude", "Longitude", "Altitude"])
-    
+        writer.writerow(["UTC","Latitude","Longitude","Sats","Altitude"])
+        
         while True:
             raw = ser.readline().decode("utf-8", errors='ignore').strip()
-        #print(raw)
-        
+            #print(raw)
+            
             if raw.startswith("$GNGGA"):
                 f_raw = raw.split(",")
-                if len(f_raw) > 9 and f_raw[9]:
-                    try:
-                        altitude = float(f_raw[9])
-                    except ValueError:
-                        altitude = None
+                if len(f_raw) > 9:
+                    if f_raw[9]:
+                        try:
+                            altitude = float(f_raw[9])
+                        except ValueError:
+                            altitude = None
+                    if f_raw[7]:
+                        try:
+                            num_sats = int(f_raw[7])
+                        except ValueError:
+                            num_sats = None
 
-            elif raw.startswith("$GNRMC"): 
+
+            if raw.startswith("$GNRMC"): 
                 f_raw = raw.split(",")
                 if len(f_raw) > 6:
                     lat = f_raw[3]
@@ -167,7 +178,7 @@ def gnss_proc():
                     long = f_raw[5]
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
-                writer.writerow([f_raw[1],dec_lat, dec_long, altitude])
+                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
 
 
 def blenano_proc():
@@ -232,7 +243,8 @@ def gnss_proc():
     import serial
     import csv
 
-    #gnss_proc_log = 'test_logs/gnss_proc_log'
+    ser = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
+    gnss_proc_log = 'proc_files/gnss_proc_log'
 
     def decimal(coord, direction):
         if not coord:
@@ -263,13 +275,14 @@ def gnss_proc():
     #print(decimal)
 
     altitude = None
+    num_sats = None
     
     with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
-        writer.writerow(["UTC","Latitude","Longitude","No. of Satellites","Altitude"])
+        writer.writerow(["UTC","Latitude","Longitude","Sats","Altitude"])
         
         while True:
-            raw = gnss_serial.readline().decode("utf-8", errors='ignore').strip()
+            raw = ser.readline().decode("utf-8", errors='ignore').strip()
             #print(raw)
             
             if raw.startswith("$GNGGA"):
@@ -287,7 +300,7 @@ def gnss_proc():
                             num_sats = None
 
 
-            elif raw.startswith("$GNRMC"): 
+            if raw.startswith("$GNRMC"): 
                 f_raw = raw.split(",")
                 if len(f_raw) > 6:
                     lat = f_raw[3]
@@ -296,10 +309,7 @@ def gnss_proc():
                     long = f_raw[5]
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
-                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
-                #print(f"{dec_lat}, {dec_long}, {num_sats},{altitude}")
-                
-    gnss_proc()
+                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])    
 
 def gsm_proc(sms_q):
     import serial 
@@ -337,19 +347,24 @@ def check_arduino_health(arduino_flag):
             arduino_flag.set()
         time.sleep(2)
 
-def check_rpi_temp():
+def check_rpi_temp():                                                            
     rpi_temp = subprocess.check_output(['vcgencmd', 'measure_temp'])
     rpi_temp = rpi_temp.decode()
     rpi_temp = rpi_temp[:-1]
     rpi_temp = rpi_temp.split('=')[1][:-2]
     return (rpi_temp)
 
+
 def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
     ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
     while True:
         with electrical_health_lock:
-            voltage_shared.value = ina219.getBusVoltage_V()
-            current_shared.value = -ina219.getCurrent_mA()
+            voltage = int(ina219.getBusVoltage_V())
+            voltage = "{:6.3f}".format(voltage)
+            voltage_shared.value = float(voltage)
+            current = ina219.getCurrent_mA()
+            current = "{:6.3f}".format(current/1000)
+            current_shared.value = float(current)
         time.sleep(0.2)
 
 def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_shared, electrical_health_lock):

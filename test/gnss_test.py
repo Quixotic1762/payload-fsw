@@ -37,7 +37,7 @@ def gnss_proc():
     #print(decimal)
 
     altitude = None
-    
+    num_sats = None
     
     with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
@@ -62,7 +62,7 @@ def gnss_proc():
                             num_sats = None
 
 
-            elif raw.startswith("$GNRMC"): 
+            if raw.startswith("$GNRMC"): 
                 f_raw = raw.split(",")
                 if len(f_raw) > 6:
                     lat = f_raw[3]
