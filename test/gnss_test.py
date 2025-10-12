@@ -1,6 +1,8 @@
 '''
 Author: Ashwin Kumar, Ghanit Taunk
 '''
+import subprocess
+import time
 def gnss_proc():
     import serial
     import csv
@@ -72,6 +74,14 @@ def gnss_proc():
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
                 writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
+                gnss_fd.flush()
                 print(f"Lat: {dec_lat}, Long: {dec_long}, Sat: {num_sats}, Alt: {altitude}")
-                
+                line = getline('test_logs/gnss_proc_log')
+
+def getline(proc_fp):
+    line = subprocess.check_output(['tail','-n','1',proc_fp])
+    return line.decode().split('\n')[0]
+
+
 gnss_proc()
+

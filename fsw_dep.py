@@ -12,7 +12,10 @@ telemetry_log = 'telemetry_logs/telemetry_log'
 gsm_serial = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
 gnss_serial = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
 nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
-nano_stdout = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+try: 
+    nano_stdout = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+except:
+    pass
 
 def lora(telm_q, tx_enable,global_packet_count):
     """    
@@ -54,6 +57,7 @@ def lora(telm_q, tx_enable,global_packet_count):
                     message = telm_q.get()
                     message = f"{message}"
                     lora.send(message.encode())
+                    global_packet_count.value += 1
                     print(message)
                 payload, rssi = lora.receive(timeout=100)
                 if payload:
@@ -168,8 +172,7 @@ def gnss_proc():
                         except ValueError:
                             num_sats = None
 
-
-            if raw.startswith("$GNRMC"): 
+            if raw.startswith("$GNRMC"):
                 f_raw = raw.split(",")
                 if len(f_raw) > 6:
                     lat = f_raw[3]
@@ -181,7 +184,7 @@ def gnss_proc():
                 writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
 
 
-def blenano_proc():
+def blenano_proc(arduino_flag):
     import serial
     import csv
     import os
@@ -235,7 +238,8 @@ def blenano_proc():
                         writer.writerow(sensor_data)
 
         except Exception as e:
-            print("Error reading serial data:", e)
+            arduino_flag.clear()
+            continue
 
 
 
@@ -309,7 +313,9 @@ def gnss_proc():
                     long = f_raw[5]
                     long_dir = f_raw[6]
                     dec_long = decimal_long(long, long_dir)
-                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])    
+                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
+                gnss_fd.flush()
+
 
 def gsm_proc(sms_q):
     import serial 
@@ -339,11 +345,34 @@ def gsm_proc(sms_q):
         time.sleep(0.1)
 
 def check_arduino_health(arduino_flag):
+    nano_alive = '3'
+    global nano_stdout
+    global nano_serial
+    dev = 0
+    reinit_flag = 0
     while True:
-        nano_serial.write(nano_alive.encode())
-        buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
+        if reinit_flag:
+            try:
+                dev = 1 - dev
+                dev_path = f"/dev/ttyACM{dev}"
+                nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
+                nano_stdout = serial.Serial(dev_path, 115200, timeout=1)
+                reinit_flag = 0
+            except:
+                reinit_flag = 1 
+                arduino_flag.clear()
+                pass
+             
+        try:
+            nano_serial.write(nano_alive.encode())
+            buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
+        except OSError:
+            buffer = '0'
+            arduino_flag.clear()
+            reinit_flag = 1
+
         if "128" in buffer:
-            print("ACK recieved")
+            reinit_flag = 0
             arduino_flag.set()
         time.sleep(2)
 
@@ -359,18 +388,20 @@ def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
     ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
     while True:
         with electrical_health_lock:
-            voltage = int(ina219.getBusVoltage_V())
-            voltage = "{:6.3f}".format(voltage)
-            voltage_shared.value = float(voltage)
-            current = ina219.getCurrent_mA()
-            current = "{:6.3f}".format(current/1000)
-            current_shared.value = float(current)
+            voltage = float(ina219.getBusVoltage_V())
+            voltage = float(f"{voltage:.3f}")
+            voltage_shared.value = voltage
+            current = float(ina219.getCurrent_mA())
+            current = current/1000
+            current = float(f"{current:.3f}")
+            current_shared.value = current
+            #print(f"Voltage: {voltage_shared.value:.3f}, current: {current_shared.value:.3f}")
         time.sleep(0.2)
 
 def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_shared, electrical_health_lock):
     vol_curr = 0
     while True:
-        rpi_temp = check_rpi_temp()
+        rpi_temp = float(check_rpi_temp())
         with electrical_health_lock:
             vol_curr = [voltage_shared.value, current_shared.value]
         if (rpi_temp > 90):

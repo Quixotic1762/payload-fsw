@@ -9,5 +9,5 @@ def check_rpi_temp():
     return (rpi_temp)
 
 while True:
-    time.sleep(2)
+    time.sleep(0.5)
     print(check_rpi_temp())
