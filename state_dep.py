@@ -96,8 +96,14 @@ def descent_change_check():
     ble = getline(blenano_proc_log)
     ble_arr = ble.split(',')
 
-    current_altitude = float(ble_arr[6])
-    current_acceleration = float(ble_arr[9])
+    try:
+        current_altitude = float(ble_arr[6])
+        current_acceleration = float(ble_arr[9])
+    except Exception as e:
+        print(f"State Change Error: {e}")
+        current_altitude = 0
+        current_acceleration = 0
+        pass
 
     delta_time = current_check_time - state_change.last_check
     delta_altitude = current_altitude - state_change.last_altitude
@@ -136,7 +142,12 @@ def recovery_change_check():
     ble = getline(blenano_proc_log)
     ble_arr = ble.split(',')
 
-    current_altitude = float(ble_arr[6])
+    try:
+        current_altitude = float(ble_arr[6])
+    except Exception as e:
+        print(f"State Change Error: {e}")
+        current_altitude = 0
+        pass
 
     delta_time = float(current_check_time - recovery_change.last_check)
     delta_vel_time = float(current_check_time - recovery_change.last_vel_time)

@@ -53,13 +53,14 @@ def lora(telm_q, tx_enable,global_packet_count):
             #lora = LoRa()
             counter = 0
             while True:
-                if (telm_q.qsize() > 0 and (tx_enable.is_set())):
+                if (telm_q.qsize() > 0):
                     message = telm_q.get()
                     message = f"{message}"
                     lora.send(message.encode())
                     global_packet_count.value += 1
                     print(message)
-                payload, rssi = lora.receive(timeout=100)
+                #payload, rssi = lora.receive(timeout=50)
+                payload = 0
                 if payload:
                     print(payload)
                     print(payload.decode('utf-8'))
@@ -413,6 +414,160 @@ def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_s
         if (vol_curr[1] > 3):
             ocp_event.set()
         time.sleep(0.5)
+
+def rpicam_proc(pid_shared):
+    import os
+    import datetime
+    import subprocess
+    import threading
+    import signal
+    import time
+    import cv2
+    from PIL import Image
+    import piexif
+    import csv
+
+    def analyze_frame(frame, prev_frame):
+        results = {}
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        results["mean_brightness"] = round(float(gray.mean()), 2)
+    
+        # Ground vs Sky ratio
+        h, w = gray.shape
+        results["sky_ratio"] = "More sky" if gray[:h//2, :].mean() > gray[h//2:, :].mean() else "More ground"
+    
+        # Cloud cover %
+        results["cloud_cover_percent"] = round(100 * (gray > 180).sum() / gray.size, 2)
+    
+        # Color histogram sum
+        hist = cv2.calcHist([frame], [0], None, [32], [0, 256])
+        results["histogram_sum"] = int(hist.sum())
+    
+        # Anomaly detection
+        if prev_frame is not None:
+            diff = cv2.absdiff(cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY), gray)
+            results["anomaly"] = f"?? Sudden change (score={diff.mean():.2f})" if diff.mean() > 25 else "Normal"
+        else:
+            results["anomaly"] = "First frame"
+    
+        return results
+    
+    def save_with_exif(frame_path, frame_number, folder_name, results):
+        summary = "; ".join([f"{k}:{v}" for k, v in results.items()])
+        timestamp = datetime.datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+    
+        exif_dict = {
+            "0th": {
+                piexif.ImageIFD.Make: u"Raspberry Pi",
+                piexif.ImageIFD.Model: u"PiCam v3",
+                piexif.ImageIFD.Software: u"Mission Logger",
+                piexif.ImageIFD.ImageDescription: f"Frame {frame_number}, {folder_name}, {summary}",
+            },
+            "Exif": {
+                piexif.ExifIFD.DateTimeOriginal: timestamp,
+                piexif.ExifIFD.UserComment: summary.encode("utf-8"),
+            },
+        }
+    
+        exif_bytes = piexif.dump(exif_dict)
+        img = Image.open(frame_path)
+        img.save(frame_path, exif=exif_bytes)
+
+    class VideoRecorder(threading.Thread):
+        def __init__(self, video_path):
+            threading.Thread.__init__(self, group=None)
+            self.video_path = video_path
+            self.process = None
+
+        def run(self):
+            self.process = subprocess.Popen([
+                "rpicam-vid",
+                "-t", "0",                     # record until stopped
+                "-o", self.video_path,         # output file
+                "--framerate", "60",           # FPS
+                "--width", "1920",             # width
+                "--height", "1080",            # height
+                "--nopreview"                  # headless
+            ])
+            self.process.wait()
+
+        def stop(self):
+            if self.process:
+                # Send SIGINT instead of terminate for proper MP4 finalization
+                self.process.send_signal(signal.SIGINT)
+                self.process.wait()
+                time.sleep(1)  # allow libcamera to finalize file
+
+
+    def main():
+        pid_shared.value = os.getpid()
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        vid_dir_list = sorted(os.listdir('vid_logs/'))
+        try:
+            last_vid = vid_dir_list[-1]
+        except IndexError:
+            last_vid = 'mission_0'
+
+        last_vid_arr = last_vid.split('_')
+        print(last_vid_arr)
+        last_vid_arr[1] = str(int(last_vid_arr[1]) + 1)
+        folder = '_'.join(last_vid_arr)
+        folder = f"vid_logs/{folder}"
+
+        os.makedirs(folder, exist_ok=True)
+
+        video_path = os.path.join(folder, "output.mp4")
+        report_path = os.path.join(folder, "image_analysis_report.txt")
+        frames_dir = os.path.join(folder, "frames")
+        os.makedirs(frames_dir, exist_ok=True)
+
+        recorder = VideoRecorder(video_path)
+        recorder.start()
+        print("? Recording started. Press CTRL+C to stop...")
+
+        # Wait until user stops recording
+        try:
+            signal.pause()
+        except KeyboardInterrupt:
+            print("\n? Stopping recording...")
+            recorder.stop()
+        
+    # Extract frames at 1 FPS using ffmpeg
+        print("? Extracting frames at 1 FPS...")
+        subprocess.run([
+            "ffmpeg", "-i", video_path, "-vf", "fps=1",
+            os.path.join(frames_dir, "frame_%04d.jpg")
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+        # -------------------------------
+        # Log frame timestamps
+        # -------------------------------
+        frame_files = sorted([f for f in os.listdir(frames_dir) if f.endswith(".jpg")])
+        start_time = datetime.datetime.now()  # use extraction time as base
+        with open(os.path.join(frames_dir, "frame_timestamps.csv"), "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["frame", "timestamp"])
+            for i, frame in enumerate(frame_files):
+                timestamp = start_time + datetime.timedelta(seconds=i)  # 1 FPS
+                writer.writerow([frame, timestamp.strftime("%Y-%m-%d %H:%M:%S")])
+    
+        # Analyze frames
+        prev_frame = None
+        with open(report_path, "w") as report:
+            for i, f_name in enumerate(frame_files):
+                frame_path = os.path.join(frames_dir, f_name)
+                frame = cv2.imread(frame_path)
+                results = analyze_frame(frame, prev_frame)
+                report.write(f"{f_name} ? {results}\n")
+                report.flush()
+                save_with_exif(frame_path, i, folder, results)
+                prev_frame = frame
+    
+        print(f"? Mission data saved in {folder}")
+
+
+    main()
 
 def ocp_shutdown(ocp_event):
     ocp_event.wait()
