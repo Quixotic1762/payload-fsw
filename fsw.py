@@ -27,6 +27,7 @@ from state_dep import *
 from fsw_dep import *
 import signal
 import sys
+import RPi.GPIO as GPIO
 
 
 mission_timer_start = 0
@@ -56,6 +57,9 @@ deploy_parachute_nano = "2"
 nano_alive = "3"
 
 #=============================================================
+BUZZER_PIN = 26
+#=============================================================
+
 
 def main(global_state, global_packet_count):
     mission_timer_flag = 1
@@ -70,12 +74,20 @@ def main(global_state, global_packet_count):
     global gnss_proc
     global gsm_proc
     global rpicam_proc
+    global ocp_shutdown
 
     global tx_enable
 
     sms_q = Queue()
 
     last_tx_timestamp = 0
+
+
+    GPIO.setmode(GPIO.BCM)
+
+    GPIO.setup(BUZZER_PIN, GPIO.OUT)
+
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
 
     blenano_proc = Process(target=blenano_proc, args=(arduino_flag,))
     gnss_proc = Process(target=gnss_proc)
@@ -86,7 +98,7 @@ def main(global_state, global_packet_count):
     nano_health_check_proc = Process(target=check_arduino_health, args=(arduino_flag,))
     rpi_health = Process(target=health_check, args=(temp_event, voltage_event,ocp_event, current_shared, voltage_shared, electrical_health_lock,))
     rpicam_proc = Process(target=rpicam_proc, args=(pid_shared,))
-    
+    ocp_shutdown = Process(target=ocp_shutdown, args=(ocp_event,))
     blenano_proc.start()
     hackrf_proc.start()
     #lora_proc.start()
@@ -94,13 +106,16 @@ def main(global_state, global_packet_count):
     measure_voltage_proc.start()
     nano_health_check_proc.start()
     rpi_health.start()
+    ocp_shutdown.start()
 
-    rpicam_proc.start()
+    #rpicam_proc.start()
     
     #gsm_proc.start()
 
     parachute_enable = 1
     fins_flag = 1
+
+    beep(3)
     
     while True:
         time.sleep(0.1)
@@ -109,18 +124,19 @@ def main(global_state, global_packet_count):
         temp_flag = int(temp_event.is_set())
         voltage_flag = int(voltage_event.is_set())
         e_flag = (arduino_health) + (temp_flag*2) + (voltage_flag*4)
-        
         if (state == boot):
             print("Boot state")
             state_restore = file_manager(global_state)
 
             if (state_restore == 0):
                 state = global_state.value
+                beep(3)
                 lora_proc.start()
                 tx_enable.set()
             
             if (state_restore == 1):
                 global_state.value = idle
+                beep(3)
                 lora_proc.start()
                 state = global_state.value
                 tx_enable.clear()
@@ -137,20 +153,14 @@ def main(global_state, global_packet_count):
             
             telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string)
-            ''''
-            --> Wait for Ack -> Start Transmiting Telemetry Stringacceleration
-            LoRa_proc is running in recieve mode:
-                two options -> wait for ACK
-                            -> create some kind of signal using os/multipr000000000000000000000000000000000000ocessing.event
-            
+            '''            
             if not tx_enable.is_set():
-                print("waiting for ack")
+                print("waiting for ack") 
                 tx_enable.wait()
                 print(tx_enable.is_set())
             '''
             
             if int(time.time() - last_tx_timestamp) >= 0.5:
-                print("Attempt to send telemetry")
                 telm_q.put(telm_string)
                 last_tx_timestamp = time.time()
             
@@ -164,7 +174,7 @@ def main(global_state, global_packet_count):
             if state_change.change_state == True:
                 global_state.value = ascent
                 state_change.change_state = False
-            
+                beep(3)
     
         if (state == ascent):
             print("ascent state")
@@ -194,21 +204,15 @@ def main(global_state, global_packet_count):
             descent_change_check()
             if state_change.change_state == True:
                 global_state.value = descent
-                
-
+                beep(3)
         
         if (state == descent):
             print("descent state")
-            '''
-            signal ble to actuate fins, uart.
-            '''
+
             if fins_flag:
                 nano_serial.write(actuate_fins_nano.encode())
                 fins_flag = 0
    
-            '''
-            check altitude if between 490 and 510 open parachute. 
-            '''
             ble = getline(blenano_proc_log)
             ble_arr = ble.split(',')
             altitude = float(ble_arr[6])
@@ -216,10 +220,6 @@ def main(global_state, global_packet_count):
             if (altitude < 510) and parachute_enable:
                 nano_serial.write(deploy_parachute_nano.encode())
                 parachute_enable = 0
-            '''
-            check if parachute caused any thing: with the given mechanism it doesnt make muc
-
-            '''
 
             telm_string_descent = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string_descent)
@@ -240,28 +240,13 @@ def main(global_state, global_packet_count):
 
         if (state == recovery):
             print("recovery")
-            '''
-            terminate lora proc
-            terminate ble proc
-            get lat long from gnss
-            invoke gsm_proc
-            '''
+            GPIO.output(BUZZER_PIN, GPIO.HIGH)
+            
             telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string)
 
             sms_q.put(telm_string)
-            '''
-            -> transmit sms_payload
-            -> Trigger audio beacons
-            '''
-def cpy_src():
-    file = open("src_log", "r", newline='')
-    ble_fd = open('proc_files/blenano_proc_log', "w", newline='')
-    while True:
-        line = file.readline()
-        ble_fd.write(line)
-        ble_fd.flush()
-        time.sleep(0.05)
+
 
 def file_manager(global_state):
     global state
@@ -381,13 +366,12 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     telm_str = f"#,{telm_str},00,{ack},$\r\n"
 
     return telm_str
-'''
-#<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,<LORA_RSSI>,<ERROR_FLAGS>,<CHECKSUM>,<ACK>$
-'''
 
-'''
-def telecom_parse_proc(telecommand):
-'''
+def beep(duration):
+    GPIO.output(BUZZER_PIN, GPIO.HIGH) # Turn the buzzer on
+    time.sleep(duration)               # Wait for the specified duration
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
+
 def signal_handler(signum, frame):
     print(f"{signum} recieved")
     global lora_proc
@@ -416,8 +400,6 @@ if __name__ == '__main__':
     global_state = Value("i", 0)
     global_packet_count = Value("i", 0)
     pid_shared = Value("i", 0)
-
-    p1 = Process(target=cpy_src)
     #signal.signal(signal.SIGINT, signal_handler)
     #signal.signal(signal.SIGTERM, signal_handler)
 

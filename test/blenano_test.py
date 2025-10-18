@@ -51,7 +51,8 @@ def blenano_proc():
                     with open(ble_file, "a", newline="") as sf:
                         writer = csv.writer(sf)
                         writer.writerow(sensor_data)
-                        print(sensor_data)
+                        #print(sensor_data)
+                        print(f"{sensor_data[7]}\t{sensor_data[8]}\t{sensor_data[9]}")
 
         except Exception as e:
             print("Error reading serial data:", e)

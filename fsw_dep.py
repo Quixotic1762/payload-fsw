@@ -58,14 +58,16 @@ def lora(telm_q, tx_enable,global_packet_count):
                     message = f"{message}"
                     lora.send(message.encode())
                     global_packet_count.value += 1
-                    print(message)
+                    #print(message)
                 #payload, rssi = lora.receive(timeout=50)
+                '''
                 payload = 0
                 if payload:
                     print(payload)
                     print(payload.decode('utf-8'))
                     if payload.decode('utf-8') == '1':
                         tx_enable.set()
+                '''
     
         except Exception as e:
             print(f"Error: {e}")
@@ -413,6 +415,8 @@ def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_s
             voltage_event.set()
         if (vol_curr[1] > 3):
             ocp_event.set()
+        else:
+            ocp_event.clear()
         time.sleep(0.5)
 
 def rpicam_proc(pid_shared):
@@ -571,9 +575,16 @@ def rpicam_proc(pid_shared):
 
 def ocp_shutdown(ocp_event):
     ocp_event.wait()
+    print("Entered OCP")
+    while True:
+        print(ocp_event.is_set())
+        time.sleep(2)
+
+    # turn off hackrf
+    # turn off camera (if running) 
     # reset arduino 
-    # gnss? 
-    #
+    # gnss?
+    # gsm ? 
     
 def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
