@@ -1,6 +1,8 @@
 import subprocess
 import serial
 import time
+import sys
+import signal
 import ina219_lib
 
 blenano_proc_log = 'proc_files/blenano_proc_log'
@@ -31,6 +33,7 @@ def lora(telm_q, tx_enable,global_packet_count):
     import sys
     import time
     from datetime import datetime
+    import signal
 
     # Import the LoRa class from our main file
     # Make sure lora_rpi5_interface.py is in the same directory
@@ -39,6 +42,14 @@ def lora(telm_q, tx_enable,global_packet_count):
     except ImportError as e:
         print(f"Import error: {e}")
         sys.exit(1)
+    
+    def termination_handler(signum, frame):
+        if 'lora' in locals():
+            lora.close()
+        sys.exit(1)
+
+    signal.signal(signal.SIGTERM, termination_handler)
+    signal.signal(signal.SIGINT, termination_handler)
 
     def main():
         try:
@@ -58,7 +69,7 @@ def lora(telm_q, tx_enable,global_packet_count):
                     message = f"{message}"
                     lora.send(message.encode())
                     global_packet_count.value += 1
-                    #print(message)
+                    print(message)
                 #payload, rssi = lora.receive(timeout=50)
                 '''
                 payload = 0
@@ -76,6 +87,8 @@ def lora(telm_q, tx_enable,global_packet_count):
                 lora.close()
                 print("LoRa resources released.")
     main()
+
+'''
 
 def hackrf_proc():
     import subprocess
@@ -111,6 +124,94 @@ def hackrf_proc():
                         continue
 
     run_hackrf_sweep()
+'''
+def rtl_proc():
+    #!/usr/bin/env python3
+
+    import subprocess
+    import csv
+    import os
+    import sys
+    import signal 
+
+    # === CONFIGURATION ===
+    # Frequency range: lower:upper in MHz (as floats)
+    # e.g., 439 MHz
+     # seconds per sweep
+    CSV_FILE = "proc_files/rtl_log"
+
+    with open(CSV_FILE, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Timestamp","Freq_MHz","RSSI_dBm"])
+
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(CSV_FILE), exist_ok=True)
+    rtl_log_fd = open(CSV_FILE, "a", newline="")
+    rtl_log_writer = csv.writer(rtl_log_fd)
+
+    def terminationa_handler(signum, frame):
+        print("Terminating RTL-SDR")
+        rtl_log_fd.close()
+
+    def run_sweep():
+        FREQ_LO = 700.0     # e.g., 433 MHz
+        FREQ_HI = 705.0
+        BIN_WIDTH_HZ = 25000  # 25 kHz bins, for example
+        GAIN_DB = 40        # fixed gain (helps consistency)
+        INTEGRATION_S = 0.5
+        
+        # Build rtl_power command
+
+        # Run the process
+        while True:
+            if (FREQ_LO >= 2695) and (FREQ_HI >= 2700):
+                FREQ_LO = 700
+                FREQ_HI = 705
+            freq_range_arg = "{:.6f}M:{:.6f}M:{:.0f}".format(FREQ_LO, FREQ_HI, BIN_WIDTH_HZ)
+            cmd = [
+            "rtl_power",
+            "-f", freq_range_arg,
+            "-g", str(GAIN_DB),
+            "-i", str(INTEGRATION_S),
+            "-1",   # single-shot mode
+            "-"     # output to stdout
+            ]
+            try:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            except Exception as e:
+                print("Error starting rtl_power:", e, file=sys.stderr)
+                return
+
+            f = rtl_log_fd
+            w = rtl_log_writer
+
+            for line in proc.stdout:
+                # Example line: 2025-10-18,17:44:33,433000000,439000000,25000,40,-60.24,-58.70,...
+                parts = line.strip().split(",")
+                if len(parts) < 7:
+                    continue
+                timestamp = "{} {}".format(parts[0], parts[1])
+                try:
+                    hz_low = float(parts[2])
+                    bin_w = float(parts[4])
+                    rssi_vals = [ float(r) for r in parts[6:]]
+                except ValueError:
+                    continue
+
+                for i, r in enumerate(rssi_vals):
+                    freq_mhz = (hz_low + i*bin_w) / 1e6
+                    # Log to CSV and print
+                    r += 5
+                    w.writerow([timestamp, "{:.3f}".format(freq_mhz), r])
+                    f.flush()
+                    #print(f"{timestamp} | {freq_mhz:.3f} MHz | {r:.2f} dBm")
+                FREQ_LO += 5
+                FREQ_HI += 5
+            # Wait a bit before next sweep if you loop later
+            #time.sleep(0.1)
+    signal.signal(signal.SIGINT, terminationa_handler)
+    signal.signal(signal.SIGTERM, terminationa_handler)
+    run_sweep()
 
 '''
 Author: Ashwin Kumar, Ghanit Taunk
@@ -196,6 +297,14 @@ def blenano_proc(arduino_flag):
 
     ble_file = "proc_files/blenano_proc_log"
     volt_file = "proc_files/blevsas_log"
+
+    def terminationa_handler(signum, frame):
+        nano_serial.close()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, terminationa_handler)
+    signal.signal(signal.SIGTERM, terminationa_handler)
+
     
     with open(ble_file, "w", newline="") as f:
         writer = csv.writer(f)
@@ -253,6 +362,11 @@ def gnss_proc():
     ser = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
     gnss_proc_log = 'proc_files/gnss_proc_log'
 
+    def termination_handler(signum, frame):
+        gnss_fd.close()
+        ser.close()
+        sys.exit()
+
     def decimal(coord, direction):
         if not coord:
             return None
@@ -283,7 +397,10 @@ def gnss_proc():
 
     altitude = None
     num_sats = None
-    
+
+    signal.signal(signal.SIGTERM, termination_handler)
+    signal.signal(signal.SIGINT, termination_handler)
+   
     with open(gnss_proc_log, "w", newline="") as gnss_fd:
         writer = csv.writer(gnss_fd)
         writer.writerow(["UTC","Latitude","Longitude","Sats","Altitude"])
@@ -339,7 +456,14 @@ def gsm_proc(sms_q):
         msg = message + chr(26)
         msg_bytes = msg.encode()
         gsm_serial.write(msg_bytes)
-    
+
+    def termination_handler(signum, frame):
+        gsm_serial.close()
+        sys.exit()
+
+    signal.signal(signal.SIGTERM, termination_handler)
+    signal.signal(signal.SIGINT, termination_handler)
+
     while True:
         curr_time = time.time()
         if (curr_time - last_transmit) and (sms_q.qsize > 0):
@@ -348,11 +472,19 @@ def gsm_proc(sms_q):
         time.sleep(0.1)
 
 def check_arduino_health(arduino_flag):
+    def termination_handler(signum, frame):
+        nano_stdout.close()
+        sys.exit()
+    
+    signal.signal(signal.SIGTERM, termination_handler)
+    signal.signal(signal.SIGINT, termination_handler)
+    
     nano_alive = '3'
     global nano_stdout
     global nano_serial
     dev = 0
     reinit_flag = 0
+    buffer = ''
     while True:
         if reinit_flag:
             try:
@@ -368,7 +500,11 @@ def check_arduino_health(arduino_flag):
              
         try:
             nano_serial.write(nano_alive.encode())
-            buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
+            try:
+                buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
+            except Exception as e:
+                print(e)
+
         except OSError:
             buffer = '0'
             arduino_flag.clear()
@@ -399,10 +535,12 @@ def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
             current = float(f"{current:.3f}")
             current_shared.value = current
             #print(f"Voltage: {voltage_shared.value:.3f}, current: {current_shared.value:.3f}")
-        time.sleep(0.2)
+        time.sleep(0.1)
 
 def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_shared, electrical_health_lock):
     vol_curr = 0
+    last_current_check = time.time()
+    curr_status = 0
     while True:
         rpi_temp = float(check_rpi_temp())
         with electrical_health_lock:
@@ -413,11 +551,24 @@ def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_s
         if (vol_curr[0] < 3.15):
             #set event
             voltage_event.set()
+        if (time.time() - last_current_check) > 0.5:
+            last_current_check = time.time()
+            if curr_status == 0:
+                ocp_event.set()
+            else:
+                ocp_event.clear()
+            curr_status = 0
+        if (vol_curr[1]) < 3:
+            curr_stat += 1
+
+        
+        '''
         if (vol_curr[1] > 3):
             ocp_event.set()
         else:
             ocp_event.clear()
-        time.sleep(0.5)
+        '''
+        time.sleep(0.1)
 
 def rpicam_proc(pid_shared):
     import os
@@ -570,15 +721,15 @@ def rpicam_proc(pid_shared):
     
         print(f"? Mission data saved in {folder}")
 
-
     main()
 
-def ocp_shutdown(ocp_event):
+def ocp_shutdown(ocp_event, pid_shared):
     ocp_event.wait()
     print("Entered OCP")
-    while True:
-        print(ocp_event.is_set())
-        time.sleep(2)
+    prev_cam_time_check = time.time()
+   # while True:
+        
+        
 
     # turn off hackrf
     # turn off camera (if running) 

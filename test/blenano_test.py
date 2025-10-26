@@ -44,15 +44,14 @@ def blenano_proc():
                     with open(volt_file, "a", newline="") as vf:
                         writer = csv.writer(vf)
                         writer.writerow([ts, volt])
-                       # print(ts, volt)
+                        print(ts, volt)
 
                 elif parts[0] == "S" and len(parts) == 17:
                     _, *sensor_data = parts
                     with open(ble_file, "a", newline="") as sf:
                         writer = csv.writer(sf)
                         writer.writerow(sensor_data)
-                        #print(sensor_data)
-                        print(f"{sensor_data[7]}\t{sensor_data[8]}\t{sensor_data[9]}")
+                        print(sensor_data)
 
         except Exception as e:
             print("Error reading serial data:", e)

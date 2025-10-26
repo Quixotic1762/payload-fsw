@@ -45,6 +45,7 @@ blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
 gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
+rtl_log = "proc_files/rtl_log"
 telemetry_log = 'telmetry_logs/telemetry_log'
 
 # Phone number to send the sms' to 
@@ -70,11 +71,12 @@ def main(global_state, global_packet_count):
     recovery =  4
 
     global blenano_proc
-    global hackrf_proc
+    #global hackrf_proc
     global gnss_proc
     global gsm_proc
     global rpicam_proc
     global ocp_shutdown
+    global rtl_proc
 
     global tx_enable
 
@@ -83,15 +85,16 @@ def main(global_state, global_packet_count):
     last_tx_timestamp = 0
 
 
-    GPIO.setmode(GPIO.BCM)
+   # GPIO.setmode(GPIO.BCM)
 
-    GPIO.setup(BUZZER_PIN, GPIO.OUT)
+    #GPIO.setup(BUZZER_PIN, GPIO.OUT)
 
-    GPIO.output(BUZZER_PIN, GPIO.LOW)
+    #GPIO.output(BUZZER_PIN, GPIO.LOW)
 
     blenano_proc = Process(target=blenano_proc, args=(arduino_flag,))
     gnss_proc = Process(target=gnss_proc)
-    hackrf_proc = Process(target=hackrf_proc)
+    #hackrf_proc = Process(target=hackrf_proc)
+    rtl_proc = Process(target=rtl_proc)
     lora_proc = Process(target=lora, args=(telm_q,tx_enable,global_packet_count,))
     gsm_proc = Process(target=gsm_proc, args=(sms_q,))
     measure_voltage_proc = Process(target=measure_voltage, args=(current_shared, voltage_shared, electrical_health_lock,))
@@ -100,8 +103,9 @@ def main(global_state, global_packet_count):
     rpicam_proc = Process(target=rpicam_proc, args=(pid_shared,))
     ocp_shutdown = Process(target=ocp_shutdown, args=(ocp_event,))
     blenano_proc.start()
-    hackrf_proc.start()
-    #lora_proc.start()
+    #hackrf_proc.start()
+    rtl_proc.start()     
+
     gnss_proc.start()
     measure_voltage_proc.start()
     nano_health_check_proc.start()
@@ -115,7 +119,7 @@ def main(global_state, global_packet_count):
     parachute_enable = 1
     fins_flag = 1
 
-    beep(3)
+    #beep(3)
     
     while True:
         time.sleep(0.1)
@@ -130,13 +134,13 @@ def main(global_state, global_packet_count):
 
             if (state_restore == 0):
                 state = global_state.value
-                beep(3)
+                #beep(3)
                 lora_proc.start()
                 tx_enable.set()
             
             if (state_restore == 1):
                 global_state.value = idle
-                beep(3)
+                #beep(3)
                 lora_proc.start()
                 state = global_state.value
                 tx_enable.clear()
@@ -278,7 +282,7 @@ def file_manager(global_state):
         new_file = '_'.join(new_file_split)
         new_file_path = f"{working_dir}/{new_file}"
         file = open(new_file_path, "w", newline='')
-        file.write("#,<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,<ERROR_FLAGS>,<CHECKSUM>,<ACK>,$\n")
+        file.write("#,<TEAM_ID>,<MISSION_TIME>,<PACKET_COUNT>,<BLE_TEMP>,<BLE_PRESSURE>,<BLE_ALT>,<HACKRF_FREQ>,<HACKRF_RSSI>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>,<MX>,<MY>,<MZ>,<SOFTWARE_STATE>,<GNSS_LAT>,<GNSS_LONG>,<GNSS_ALT>,<GNSS_TIME>,<GNSS_SATS>,<VOLTAGE>,<CURRENT>,<RPI_TEMP>,0,<ERROR_FLAGS>,<CHECKSUM>,<ACK>,$\n")
         file.close()
         telemetry_log = new_file_path
         return 1
@@ -343,10 +347,14 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     vsas_volt_list = vsas_volt.split(',')
     voltage = vsas_volt_list[1][:-1]
 
-    hackrf_line = getline(hackrf_log)
-    hackrf_arr = hackrf_line.split(',')
-    freq = hackrf_arr[1]
-    rssi = hackrf_arr[2][:-1]
+    try:
+        rtl_line = getline(rtl_log)
+        rtl_arr = rtl_line.split(',')
+        freq = rtl_arr[1]
+        rssi = rtl_arr[2][:-1]
+    except IndexError:
+        freq = 0
+        rssi = 0
 
     current = current_shared.value # add code to calculate it 
     voltage = voltage_shared.value
@@ -363,7 +371,7 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
 
     telm_str = f"{team_id},{mission_time},{packet_count},{temp},{pressure},{ble_alt},{freq},{rssi},{ax},{ay},{az},{gx},{gy},{gz},{mx},{my},{mz},{state},{gnss_lat:.2f},{gnss_long:.2f},{gnss_alt},{gnss_time},{gnss_sat},{voltage:.2f},{current:.2f},{rpi_temperature},{error_flags}"
     checksum = zlib.crc32(telm_str.encode())
-    telm_str = f"#,{telm_str},00,{ack},$\r\n"
+    telm_str = f"#,{telm_str},{ack},$\r\n"
 
     return telm_str
 
@@ -376,7 +384,6 @@ def signal_handler(signum, frame):
     print(f"{signum} recieved")
     global lora_proc
     blenano_proc.terminate()
-    hackrf_proc.terminate()
     lora_proc.terminate()
     #gnss_proc.start()
     #gsm_proc.start()
