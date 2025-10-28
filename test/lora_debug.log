@@ -1,124 +1,124 @@
-2025-10-26 11:04:42.665 [TEST] Running all diagnostic tests...
-2025-10-26 11:04:42.665 [INFO] 
+2025-10-26 16:16:00.089 [TEST] Running all diagnostic tests...
+2025-10-26 16:16:00.089 [INFO] 
 ===== HARDWARE TEST =====
-2025-10-26 11:04:42.665 [TEST] Testing hardware connections...
-2025-10-26 11:04:42.665 [INFO] Testing GPIO setup...
-2025-10-26 11:04:42.966 [INFO] RESET pin (GPIO4) test successful
-2025-10-26 11:04:42.966 [INFO] No Problem with DIO setup
-2025-10-26 11:04:42.966 [INFO] No Problem with DIO input
-2025-10-26 11:04:42.966 [INFO] DIO0 pin (GPIO7) state: 0
-2025-10-26 11:04:42.966 [INFO] DIO1 pin (GPIO23) state: 0
-2025-10-26 11:04:42.966 [INFO] DIO2 pin (GPIO24) state: 0
-2025-10-26 11:04:42.966 [INFO] No Problem with DIO state..
-2025-10-26 11:04:43.067 [INFO] GPIO test completed
-2025-10-26 11:04:43.067 [INFO] Testing SPI connection...
-2025-10-26 11:04:43.067 [INFO] SPI connection established
-2025-10-26 11:04:43.067 [INFO] Testing LoRa module presence...
-2025-10-26 11:04:43.268 [INFO] LoRa chip version: 0x12
-2025-10-26 11:04:43.268 [SUCCESS] LoRa module SX1276/77/78/79 detected ✓
-2025-10-26 11:04:43.369 [INFO] 
+2025-10-26 16:16:00.089 [TEST] Testing hardware connections...
+2025-10-26 16:16:00.089 [INFO] Testing GPIO setup...
+2025-10-26 16:16:00.390 [INFO] RESET pin (GPIO4) test successful
+2025-10-26 16:16:00.390 [INFO] No Problem with DIO setup
+2025-10-26 16:16:00.390 [INFO] No Problem with DIO input
+2025-10-26 16:16:00.390 [INFO] DIO0 pin (GPIO7) state: 0
+2025-10-26 16:16:00.390 [INFO] DIO1 pin (GPIO23) state: 0
+2025-10-26 16:16:00.390 [INFO] DIO2 pin (GPIO24) state: 0
+2025-10-26 16:16:00.391 [INFO] No Problem with DIO state..
+2025-10-26 16:16:00.491 [INFO] GPIO test completed
+2025-10-26 16:16:00.491 [INFO] Testing SPI connection...
+2025-10-26 16:16:00.491 [INFO] SPI connection established
+2025-10-26 16:16:00.491 [INFO] Testing LoRa module presence...
+2025-10-26 16:16:00.693 [INFO] LoRa chip version: 0x12
+2025-10-26 16:16:00.693 [SUCCESS] LoRa module SX1276/77/78/79 detected ✓
+2025-10-26 16:16:00.793 [INFO] 
 ===== REGISTER DUMP =====
-2025-10-26 11:04:43.369 [TEST] Dumping LoRa registers...
-2025-10-26 11:04:43.573 [INFO] Register dump:
-2025-10-26 11:04:43.573 [INFO]   REG_OP_MODE         : 0x81
-2025-10-26 11:04:43.573 [INFO]   REG_0x02            : 0x1a
-2025-10-26 11:04:43.573 [INFO]   REG_0x03            : 0x0b
-2025-10-26 11:04:43.573 [INFO]   REG_0x04            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x05            : 0x52
-2025-10-26 11:04:43.573 [INFO]   REG_FRF_MSB         : 0x6c
-2025-10-26 11:04:43.573 [INFO]   REG_FRF_MID         : 0x40
-2025-10-26 11:04:43.573 [INFO]   REG_FRF_LSB         : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_PA_CONFIG       : 0x8f
-2025-10-26 11:04:43.573 [INFO]   REG_0x0a            : 0x09
-2025-10-26 11:04:43.573 [INFO]   REG_0x0b            : 0x2b
-2025-10-26 11:04:43.573 [INFO]   REG_LNA             : 0x23
-2025-10-26 11:04:43.573 [INFO]   REG_0x0d            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x0e            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x0f            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x10            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x11            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_IRQ_FLAGS       : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_RX_NB_BYTES     : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x14            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x15            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x16            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x17            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x18            : 0x10
-2025-10-26 11:04:43.573 [INFO]   REG_PKT_SNR_VALUE   : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_PKT_RSSI_VALUE  : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x1b            : 0x00
-2025-10-26 11:04:43.573 [INFO]   REG_0x1c            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_MODEM_CONFIG_1  : 0x72
-2025-10-26 11:04:43.574 [INFO]   REG_MODEM_CONFIG_2  : 0xc0
-2025-10-26 11:04:43.574 [INFO]   REG_0x1f            : 0x64
-2025-10-26 11:04:43.574 [INFO]   REG_PREAMBLE_MSB    : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_PREAMBLE_LSB    : 0x0c
-2025-10-26 11:04:43.574 [INFO]   REG_PAYLOAD_LENGTH  : 0x01
-2025-10-26 11:04:43.574 [INFO]   REG_0x23            : 0xff
-2025-10-26 11:04:43.574 [INFO]   REG_0x24            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x25            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_MODEM_CONFIG_3  : 0x04
-2025-10-26 11:04:43.574 [INFO]   REG_0x27            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x28            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x29            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x2a            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x2b            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x2c            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x2d            : 0x50
-2025-10-26 11:04:43.574 [INFO]   REG_0x2e            : 0x14
-2025-10-26 11:04:43.574 [INFO]   REG_0x2f            : 0x45
-2025-10-26 11:04:43.574 [INFO]   REG_0x30            : 0x55
-2025-10-26 11:04:43.574 [INFO]   REG_0x31            : 0xc3
-2025-10-26 11:04:43.574 [INFO]   REG_0x32            : 0x05
-2025-10-26 11:04:43.574 [INFO]   REG_0x33            : 0x27
-2025-10-26 11:04:43.574 [INFO]   REG_0x34            : 0x1c
-2025-10-26 11:04:43.574 [INFO]   REG_0x35            : 0x0a
-2025-10-26 11:04:43.574 [INFO]   REG_0x36            : 0x03
-2025-10-26 11:04:43.574 [INFO]   REG_0x37            : 0x0a
-2025-10-26 11:04:43.574 [INFO]   REG_0x38            : 0x42
-2025-10-26 11:04:43.574 [INFO]   REG_SYNC_WORD       : 0x34
-2025-10-26 11:04:43.574 [INFO]   REG_0x3a            : 0x52
-2025-10-26 11:04:43.574 [INFO]   REG_0x3b            : 0x1d
-2025-10-26 11:04:43.574 [INFO]   REG_0x3c            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x3d            : 0xaf
-2025-10-26 11:04:43.574 [INFO]   REG_0x3e            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x3f            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_DIO_MAPPING_1   : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_DIO_MAPPING_2   : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_VERSION         : 0x12
-2025-10-26 11:04:43.574 [INFO]   REG_0x43            : 0x24
-2025-10-26 11:04:43.574 [INFO]   REG_TEMP            : 0x2d
-2025-10-26 11:04:43.574 [INFO]   REG_0x45            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x46            : 0x03
-2025-10-26 11:04:43.574 [INFO]   REG_0x47            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x48            : 0x04
-2025-10-26 11:04:43.574 [INFO]   REG_0x49            : 0x23
-2025-10-26 11:04:43.574 [INFO]   REG_0x4a            : 0x00
-2025-10-26 11:04:43.574 [INFO]   REG_0x4b            : 0x09
-2025-10-26 11:04:43.574 [INFO]   REG_0x4c            : 0x05
-2025-10-26 11:04:43.574 [INFO]   REG_PA_DAC          : 0x84
-2025-10-26 11:04:43.574 [INFO]   REG_0x4e            : 0x32
-2025-10-26 11:04:43.574 [INFO]   REG_0x4f            : 0x2b
-2025-10-26 11:04:43.574 [INFO] 
+2025-10-26 16:16:00.793 [TEST] Dumping LoRa registers...
+2025-10-26 16:16:00.997 [INFO] Register dump:
+2025-10-26 16:16:00.997 [INFO]   REG_OP_MODE         : 0x81
+2025-10-26 16:16:00.997 [INFO]   REG_0x02            : 0x1a
+2025-10-26 16:16:00.997 [INFO]   REG_0x03            : 0x0b
+2025-10-26 16:16:00.997 [INFO]   REG_0x04            : 0x00
+2025-10-26 16:16:00.997 [INFO]   REG_0x05            : 0x52
+2025-10-26 16:16:00.998 [INFO]   REG_FRF_MSB         : 0x6c
+2025-10-26 16:16:00.998 [INFO]   REG_FRF_MID         : 0x40
+2025-10-26 16:16:00.998 [INFO]   REG_FRF_LSB         : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_PA_CONFIG       : 0x8f
+2025-10-26 16:16:00.998 [INFO]   REG_0x0a            : 0x09
+2025-10-26 16:16:00.998 [INFO]   REG_0x0b            : 0x2b
+2025-10-26 16:16:00.998 [INFO]   REG_LNA             : 0x23
+2025-10-26 16:16:00.998 [INFO]   REG_0x0d            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x0e            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x0f            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x10            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x11            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_IRQ_FLAGS       : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_RX_NB_BYTES     : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x14            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x15            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x16            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x17            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x18            : 0x10
+2025-10-26 16:16:00.998 [INFO]   REG_PKT_SNR_VALUE   : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_PKT_RSSI_VALUE  : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x1b            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x1c            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_MODEM_CONFIG_1  : 0x72
+2025-10-26 16:16:00.998 [INFO]   REG_MODEM_CONFIG_2  : 0xc0
+2025-10-26 16:16:00.998 [INFO]   REG_0x1f            : 0x64
+2025-10-26 16:16:00.998 [INFO]   REG_PREAMBLE_MSB    : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_PREAMBLE_LSB    : 0x0c
+2025-10-26 16:16:00.998 [INFO]   REG_PAYLOAD_LENGTH  : 0x01
+2025-10-26 16:16:00.998 [INFO]   REG_0x23            : 0xff
+2025-10-26 16:16:00.998 [INFO]   REG_0x24            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x25            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_MODEM_CONFIG_3  : 0x04
+2025-10-26 16:16:00.998 [INFO]   REG_0x27            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x28            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x29            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x2a            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x2b            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x2c            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x2d            : 0x50
+2025-10-26 16:16:00.998 [INFO]   REG_0x2e            : 0x14
+2025-10-26 16:16:00.998 [INFO]   REG_0x2f            : 0x45
+2025-10-26 16:16:00.998 [INFO]   REG_0x30            : 0x55
+2025-10-26 16:16:00.998 [INFO]   REG_0x31            : 0xc3
+2025-10-26 16:16:00.998 [INFO]   REG_0x32            : 0x05
+2025-10-26 16:16:00.998 [INFO]   REG_0x33            : 0x27
+2025-10-26 16:16:00.998 [INFO]   REG_0x34            : 0x1c
+2025-10-26 16:16:00.998 [INFO]   REG_0x35            : 0x0a
+2025-10-26 16:16:00.998 [INFO]   REG_0x36            : 0x03
+2025-10-26 16:16:00.998 [INFO]   REG_0x37            : 0x0a
+2025-10-26 16:16:00.998 [INFO]   REG_0x38            : 0x42
+2025-10-26 16:16:00.998 [INFO]   REG_SYNC_WORD       : 0x34
+2025-10-26 16:16:00.998 [INFO]   REG_0x3a            : 0x52
+2025-10-26 16:16:00.998 [INFO]   REG_0x3b            : 0x1d
+2025-10-26 16:16:00.998 [INFO]   REG_0x3c            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x3d            : 0xaf
+2025-10-26 16:16:00.998 [INFO]   REG_0x3e            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x3f            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_DIO_MAPPING_1   : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_DIO_MAPPING_2   : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_VERSION         : 0x12
+2025-10-26 16:16:00.998 [INFO]   REG_0x43            : 0x24
+2025-10-26 16:16:00.998 [INFO]   REG_TEMP            : 0x2d
+2025-10-26 16:16:00.998 [INFO]   REG_0x45            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x46            : 0x03
+2025-10-26 16:16:00.998 [INFO]   REG_0x47            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x48            : 0x04
+2025-10-26 16:16:00.998 [INFO]   REG_0x49            : 0x23
+2025-10-26 16:16:00.998 [INFO]   REG_0x4a            : 0x00
+2025-10-26 16:16:00.998 [INFO]   REG_0x4b            : 0x09
+2025-10-26 16:16:00.998 [INFO]   REG_0x4c            : 0x05
+2025-10-26 16:16:00.998 [INFO]   REG_PA_DAC          : 0x84
+2025-10-26 16:16:00.998 [INFO]   REG_0x4e            : 0x32
+2025-10-26 16:16:00.999 [INFO]   REG_0x4f            : 0x2b
+2025-10-26 16:16:00.999 [INFO] 
 Detailed register analysis:
-2025-10-26 11:04:43.574 [INFO]   OP_MODE: LoRa mode, STDBY state
-2025-10-26 11:04:43.574 [INFO]   Frequency: 433.000 MHz
-2025-10-26 11:04:43.575 [INFO]   Output power: 32 dBm (PA_BOOST)
-2025-10-26 11:04:43.575 [INFO]   Bandwidth: 125 kHz
-2025-10-26 11:04:43.575 [INFO]   Coding rate: 4/5
-2025-10-26 11:04:43.575 [INFO]   Spreading factor: 12
-2025-10-26 11:04:43.575 [INFO]   Header mode: Explicit
-2025-10-26 11:04:43.575 [INFO]   IRQ flags: 0x00
-2025-10-26 11:04:43.575 [INFO]   Payload length: 1 bytes
-2025-10-26 11:04:43.575 [INFO]   Last RX bytes: 0
-2025-10-26 11:04:43.575 [INFO]   Sync word: 0x34
-2025-10-26 11:04:43.675 [INFO] 
+2025-10-26 16:16:00.999 [INFO]   OP_MODE: LoRa mode, STDBY state
+2025-10-26 16:16:00.999 [INFO]   Frequency: 433.000 MHz
+2025-10-26 16:16:00.999 [INFO]   Output power: 32 dBm (PA_BOOST)
+2025-10-26 16:16:00.999 [INFO]   Bandwidth: 125 kHz
+2025-10-26 16:16:00.999 [INFO]   Coding rate: 4/5
+2025-10-26 16:16:00.999 [INFO]   Spreading factor: 12
+2025-10-26 16:16:00.999 [INFO]   Header mode: Explicit
+2025-10-26 16:16:00.999 [INFO]   IRQ flags: 0x00
+2025-10-26 16:16:00.999 [INFO]   Payload length: 1 bytes
+2025-10-26 16:16:00.999 [INFO]   Last RX bytes: 0
+2025-10-26 16:16:00.999 [INFO]   Sync word: 0x34
+2025-10-26 16:16:01.100 [INFO] 
 ===== FREQUENCY SWEEP =====
-2025-10-26 11:04:43.675 [TEST] Starting frequency sweep...
-2025-10-26 11:04:43.877 [INFO] Sweeping from 428.0 MHz to 438.0 MHz in 0.1 MHz steps
-2025-10-26 11:04:43.877 [INFO] Testing frequency: 428.0 MHz
-2025-10-26 11:04:44.877 [INFO]   RSSI: -111 dBm
-2025-10-26 11:04:44.877 [INFO] Testing frequency: 428.1 MHz
-2025-10-26 11:04:45.878 [INFO]   RSSI: -110 dBm
-2025-10-26 11:04:45.878 [INFO] Testing frequency: 428.20000000000005 MHz
-2025-10-26 11:04:46.619 [INFO] Debug log saved to lora_debug.log
+2025-10-26 16:16:01.100 [TEST] Starting frequency sweep...
+2025-10-26 16:16:01.301 [INFO] Sweeping from 428.0 MHz to 438.0 MHz in 0.1 MHz steps
+2025-10-26 16:16:01.301 [INFO] Testing frequency: 428.0 MHz
+2025-10-26 16:16:02.302 [INFO]   RSSI: -111 dBm
+2025-10-26 16:16:02.302 [INFO] Testing frequency: 428.1 MHz
+2025-10-26 16:16:03.302 [INFO]   RSSI: -111 dBm
+2025-10-26 16:16:03.302 [INFO] Testing frequency: 428.20000000000005 MHz
+2025-10-26 16:16:03.902 [INFO] Debug log saved to lora_debug.log

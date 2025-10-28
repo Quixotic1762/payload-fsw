@@ -4,14 +4,18 @@ import time
 import sys
 import signal
 import ina219_lib
+import os
 
 blenano_proc_log = 'proc_files/blenano_proc_log'
 blevsas_log = 'proc_files/blevsas_log'
 gnss_proc_log = 'proc_files/gnss_proc_log'
 hackrf_log = 'proc_files/hackrf_log'
 telemetry_log = 'telemetry_logs/telemetry_log'
+bme_log = "proc_files/bme_proc"
+rt_log = "proc_files/rtl_log"
 
-gsm_serial = serial.Serial("/dev/ttyAMA2", 9600, timeout=1)
+
+gsm_serial = serial.Serial("/dev/ttyAMA1", 9600, timeout=1)
 gnss_serial = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
 nano_serial = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
 try: 
@@ -46,7 +50,7 @@ def lora(telm_q, tx_enable,global_packet_count):
     def termination_handler(signum, frame):
         if 'lora' in locals():
             lora.close()
-        sys.exit(1)
+        sys.exit(0)
 
     signal.signal(signal.SIGTERM, termination_handler)
     signal.signal(signal.SIGINT, termination_handler)
@@ -54,7 +58,7 @@ def lora(telm_q, tx_enable,global_packet_count):
     def main():
         try:
             lora = LoRa(
-                frequency=433.0,
+                frequency=433.5,
                 bandwidth=500000,
                 spreading_factor=11,
                 coding_rate=5,
@@ -150,8 +154,8 @@ def rtl_proc():
     rtl_log_writer = csv.writer(rtl_log_fd)
 
     def terminationa_handler(signum, frame):
-        print("Terminating RTL-SDR")
         rtl_log_fd.close()
+        sys.exit()
 
     def run_sweep():
         FREQ_LO = 700.0     # e.g., 433 MHz
@@ -164,7 +168,7 @@ def rtl_proc():
 
         # Run the process
         while True:
-            if (FREQ_LO >= 2695) and (FREQ_HI >= 2700):
+            if (FREQ_LO >= 2045) and (FREQ_HI >= 2050):
                 FREQ_LO = 700
                 FREQ_HI = 705
             freq_range_arg = "{:.6f}M:{:.6f}M:{:.0f}".format(FREQ_LO, FREQ_HI, BIN_WIDTH_HZ)
@@ -213,79 +217,6 @@ def rtl_proc():
     signal.signal(signal.SIGTERM, terminationa_handler)
     run_sweep()
 
-'''
-Author: Ashwin Kumar, Ghanit Taunk
-'''
-def gnss_proc():
-    import serial
-    import csv
-
-    ser = serial.Serial('/dev/ttyAMA4', 9600, timeout=1)
-    gnss_proc_log = 'proc_files/gnss_proc_log'
-
-    def decimal(coord, direction):
-        if not coord:
-            return None
-        try:
-            degrees = int(coord[:2])
-            minutes = float(coord[2:])
-            decimal = degrees + (minutes / 60)
-            if direction in ["S", "W"]:
-                decimal *= -1
-            return decimal
-        except ValueError:
-            return None
-        
-    def decimal_long(coord, direction):
-        if not coord:
-            return None
-        try:
-            degrees = int(coord[:3])
-            minutes = float(coord[3:])
-    
-            decimal = degrees + (minutes / 60)
-            if direction in ["S", "W"]:
-                decimal *= -1
-            return decimal
-        except ValueError:
-            return None 
-    #print(decimal)
-
-    altitude = None
-    num_sats = None
-    
-    with open(gnss_proc_log, "w", newline="") as gnss_fd:
-        writer = csv.writer(gnss_fd)
-        writer.writerow(["UTC","Latitude","Longitude","Sats","Altitude"])
-        
-        while True:
-            raw = ser.readline().decode("utf-8", errors='ignore').strip()
-            #print(raw)
-            
-            if raw.startswith("$GNGGA"):
-                f_raw = raw.split(",")
-                if len(f_raw) > 9:
-                    if f_raw[9]:
-                        try:
-                            altitude = float(f_raw[9])
-                        except ValueError:
-                            altitude = None
-                    if f_raw[7]:
-                        try:
-                            num_sats = int(f_raw[7])
-                        except ValueError:
-                            num_sats = None
-
-            if raw.startswith("$GNRMC"):
-                f_raw = raw.split(",")
-                if len(f_raw) > 6:
-                    lat = f_raw[3]
-                    lat_dir = f_raw[4]
-                    dec_lat = decimal(lat, lat_dir)
-                    long = f_raw[5]
-                    long_dir = f_raw[6]
-                    dec_long = decimal_long(long, long_dir)
-                writer.writerow([f_raw[1],dec_lat, dec_long, num_sats, altitude])
 
 
 def blenano_proc(arduino_flag):
@@ -442,13 +373,14 @@ def gsm_proc(sms_q):
     import time
 
     last_transmit = time.time()
+    number =  "+919699060432"  # -> ashwin 
 
     def send_at(command):
         #tr_buffer = (command+'\r\n').encode(encoding="utf-8")
         gsm_serial.write((command+'\r\n').encode())
         while gsm_serial.readline():
             print(gsm_serial.readline().decode('utf-8'))
-    
+            
     def send_sms(number, message):
         send_at("AT+CMGF=1")
         set_nu = 'AT+CMGS="'+number+'"'
@@ -465,11 +397,10 @@ def gsm_proc(sms_q):
     signal.signal(signal.SIGINT, termination_handler)
 
     while True:
-        curr_time = time.time()
-        if (curr_time - last_transmit) and (sms_q.qsize > 0):
+        if(sms_q.qsize() > 0):
             sms_payload = sms_q.get()
+            print(sms_payload)
             send_sms(number, sms_payload)
-        time.sleep(0.1)
 
 def check_arduino_health(arduino_flag):
     def termination_handler(signum, frame):
@@ -503,7 +434,7 @@ def check_arduino_health(arduino_flag):
             try:
                 buffer = nano_stdout.read(nano_stdout.in_waiting).decode('utf-8')
             except Exception as e:
-                print(e)
+                pass
 
         except OSError:
             buffer = '0'
@@ -524,6 +455,11 @@ def check_rpi_temp():
 
 
 def measure_voltage(current_shared, voltage_shared, electrical_health_lock):
+    def termination_handler(signum, frame):
+        sys.exit()
+    signal.signal(signal.SIGINT, termination_handler)
+    signal.signal(signal.SIGTERM, termination_handler)
+
     ina219 = ina219_lib.INA219(i2c_bus=1,addr=0x43)
     while True:
         with electrical_health_lock:
@@ -559,15 +495,8 @@ def health_check(temp_event, voltage_event, ocp_event, current_shared, voltage_s
                 ocp_event.clear()
             curr_status = 0
         if (vol_curr[1]) < 3:
-            curr_stat += 1
+            curr_status += 1
 
-        
-        '''
-        if (vol_curr[1] > 3):
-            ocp_event.set()
-        else:
-            ocp_event.clear()
-        '''
         time.sleep(0.1)
 
 def rpicam_proc(pid_shared):
@@ -723,12 +652,24 @@ def rpicam_proc(pid_shared):
 
     main()
 
-def ocp_shutdown(ocp_event, pid_shared):
+def ocp_shutdown(ocp_event, pid_shared,current_shared):
+    global rpicam_proc
     ocp_event.wait()
     print("Entered OCP")
     prev_cam_time_check = time.time()
-   # while True:
-        
+    pid = pid_shared.value
+    os.kill(pid, signal.SIGINT)
+
+    while True:
+        current = current_shared.value
+        if (time.time() - prev_cam_time_check) >= 0.5:
+            if c_status == 0:
+                rpicam_proc.start()
+            prev_cam_time_check = time.time()
+        if current > 3:
+            c_status += 1
+
+
         
 
     # turn off hackrf
@@ -736,7 +677,57 @@ def ocp_shutdown(ocp_event, pid_shared):
     # reset arduino 
     # gnss?
     # gsm ? 
-    
+
+
+def bme_proc():
+    import board
+    import busio
+    import adafruit_bme680
+    import csv
+
+    global bme_log
+
+    def termination_handler(signum, frame):
+        bme_fd.close()
+        sys.exit()
+
+    signal.signal(signal.SIGINT, termination_handler)
+    signal.signal(signal.SIGTERM, termination_handler)
+
+
+    i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+    sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+    sensor.sea_level_pressure = sensor.pressure
+
+    bme_fd = open(bme_log, 'w', newline='')
+    bme_writer = csv.writer(bme_fd)
+    bme_writer.writerow(["Temperature","Pressure", "Altitude"])
+
+    alpha = 0.1
+    smoothed_alt = 0
+
+    while True:
+        try:
+            temperature = sensor.temperature
+            pressure = sensor.pressure
+            altitude = sensor.altitude
+        except Exception as e:
+            gnss = getline('proc_files/gnss_proc_log')
+            try:
+                gnss_arr = gnss.split(',')
+                altitude = gnss_arr[4][:-1]
+            except:
+                altitude = smoothed_alt
+                temperature = 34
+                pressure = 0
+
+        smoothed_alt = (alpha * altitude) + (1 - alpha) * smoothed_alt
+        bme_row = [round(temperature, 2), round(pressure, 2), round(smoothed_alt, 2)]
+        bme_writer.writerow(bme_row)
+        bme_fd.flush()
+        time.sleep(0.05)
+
+
 def getline(proc_fp):
     line = subprocess.check_output(['tail','-n','1',proc_fp])
     return line.decode().split('\n')[0]

@@ -2,7 +2,8 @@ def gsm_proc(sms_payload):
     import serial
     import time
 
-    number = '+918984955170'
+   #number = '+918795333555'
+    number = "+919699060432"
     ser = serial.Serial("/dev/ttyAMA1", 9600, timeout=1)
 
     def send_at(command):
@@ -20,11 +21,12 @@ def gsm_proc(sms_payload):
         msg_bytes = msg.encode()
         ser.write(msg_bytes)
 
-    #send_at("AT+IPR=115200")
-
+    send_at("AT+CPIN?")
+    send_at("AT+COPS?")
+    
     while True:
         sms_payload = "#,ASI-ROCKETRY-050,2,0,29.00,1013.25,779.0,-67.21,-1.58,-1.05,-3.79,903.15,12.906797,77.595902,12,1.5843,-32,1,1502077652,$"
         send_sms(number, sms_payload)
         time.sleep(1)
-
+   
 gsm_proc("test")

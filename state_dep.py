@@ -20,7 +20,7 @@ class recovery_change_parameters():
     flag_sum = 0
     change_state = False
 
-MIN_ASCENT_ALTITUDE = 30
+MIN_ASCENT_ALTITUDE = 90
 
 state_change = state_change_parameters()
 
@@ -34,14 +34,22 @@ def idle_to_ascent_change():
     ble = getline(blenano_proc_log)
     ble_arr = ble.split(',')
 
+    bme_line = getline(bme_log)
+    bme_arr = bme_line.split(',')
+
     try:
-        current_altitude = float(ble_arr[6])
-        current_acceleration = float(ble_arr[9])
+        ax = float(ble_arr[7])
+        ay = float(ble_arr[8])
+        az = float(ble_arr[9])
+        current_acceleration = ax*ax + ay*ay + az*az
+        current_altitude = float(bme_arr[2][:-1])
+
     except Exception as e:
         print(f"State Change Error: {e}")
         current_altitude = 0
         current_acceleration = 0
         pass
+    
 
     delta_time = current_check_time - state_change.last_check
     delta_altitude = current_altitude - state_change.last_altitude
@@ -94,9 +102,16 @@ def descent_change_check():
     ble = getline(blenano_proc_log)
     ble_arr = ble.split(',')
 
+    bme_line = getline(bme_log)
+    bme_arr = bme_line.split(',')
+
     try:
-        current_altitude = float(ble_arr[6])
-        current_acceleration = float(ble_arr[9])
+        ax = float(ble_arr[7])
+        ay = float(ble_arr[8])
+        az = float(ble_arr[9])
+        current_acceleration = ax*ax + ay*ay + az*az
+        current_altitude = float(bme_arr[2][:-1])
+
     except Exception as e:
         print(f"State Change Error: {e}")
         current_altitude = 0
@@ -140,8 +155,11 @@ def recovery_change_check():
     ble = getline(blenano_proc_log)
     ble_arr = ble.split(',')
 
+    bme_line = getline(bme_log)
+    bme_arr = bme_line.split(',')
+
     try:
-        current_altitude = float(ble_arr[6])
+        current_altitude = float(bme_arr[2][:-1])
     except Exception as e:
         print(f"State Change Error: {e}")
         current_altitude = 0

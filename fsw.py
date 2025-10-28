@@ -27,7 +27,7 @@ from state_dep import *
 from fsw_dep import *
 import signal
 import sys
-import RPi.GPIO as GPIO
+from gpiozero import Buzzer
 
 
 mission_timer_start = 0
@@ -59,11 +59,13 @@ nano_alive = "3"
 
 #=============================================================
 BUZZER_PIN = 26
+buzzer = Buzzer(BUZZER_PIN)
 #=============================================================
 
 
 def main(global_state, global_packet_count):
     mission_timer_flag = 1
+    cam_flag = 1
     boot     =  0
     idle     =  1
     ascent   =  2
@@ -72,24 +74,21 @@ def main(global_state, global_packet_count):
 
     global blenano_proc
     #global hackrf_proc
+    global lora_proc
     global gnss_proc
     global gsm_proc
     global rpicam_proc
     global ocp_shutdown
     global rtl_proc
-
+    global bme_proc
+    global measure_voltage_proc
+    global nano_health_check_proc
     global tx_enable
+    global rpi_health
 
     sms_q = Queue()
 
     last_tx_timestamp = 0
-
-
-   # GPIO.setmode(GPIO.BCM)
-
-    #GPIO.setup(BUZZER_PIN, GPIO.OUT)
-
-    #GPIO.output(BUZZER_PIN, GPIO.LOW)
 
     blenano_proc = Process(target=blenano_proc, args=(arduino_flag,))
     gnss_proc = Process(target=gnss_proc)
@@ -101,24 +100,25 @@ def main(global_state, global_packet_count):
     nano_health_check_proc = Process(target=check_arduino_health, args=(arduino_flag,))
     rpi_health = Process(target=health_check, args=(temp_event, voltage_event,ocp_event, current_shared, voltage_shared, electrical_health_lock,))
     rpicam_proc = Process(target=rpicam_proc, args=(pid_shared,))
-    ocp_shutdown = Process(target=ocp_shutdown, args=(ocp_event,))
-    blenano_proc.start()
-    #hackrf_proc.start()
-    rtl_proc.start()     
+    ocp_shutdown = Process(target=ocp_shutdown, args=(ocp_event, pid_shared, current_shared))
+    bme_proc = Process(target=bme_proc)
+    beep = Process(target=beep_proc)
 
+    blenano_proc.start()
+    rtl_proc.start()     
     gnss_proc.start()
     measure_voltage_proc.start()
     nano_health_check_proc.start()
     rpi_health.start()
     ocp_shutdown.start()
-
+    bme_proc.start()
     #rpicam_proc.start()
-    
-    #gsm_proc.start()
+    gsm_proc.start()
 
     parachute_enable = 1
     fins_flag = 1
-
+    gsm_time_check = time.time()
+    ascent_time_change = 0
     #beep(3)
     
     while True:
@@ -128,27 +128,29 @@ def main(global_state, global_packet_count):
         temp_flag = int(temp_event.is_set())
         voltage_flag = int(voltage_event.is_set())
         e_flag = (arduino_health) + (temp_flag*2) + (voltage_flag*4)
+
         if (state == boot):
             print("Boot state")
             state_restore = file_manager(global_state)
 
             if (state_restore == 0):
                 state = global_state.value
-                #beep(3)
+                beep.start()
                 lora_proc.start()
                 tx_enable.set()
             
             if (state_restore == 1):
                 global_state.value = idle
-                #beep(3)
+                beep.start()
                 lora_proc.start()
                 state = global_state.value
                 tx_enable.clear()
 
             telemetry_log_fd = open(telemetry_log, "a", newline="")
-            
+            #global_state.value = 2
+
+            print("Idle state")
         if (state == idle):
-            #print("Idle state")
             global mission_timer_start
             '''' this should happen once and then not again.'''
             if mission_timer_flag:
@@ -157,19 +159,10 @@ def main(global_state, global_packet_count):
             
             telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string)
-            '''            
-            if not tx_enable.is_set():
-                print("waiting for ack") 
-                tx_enable.wait()
-                print(tx_enable.is_set())
-            '''
             
-            if int(time.time() - last_tx_timestamp) >= 0.5:
+            if int(time.time() - last_tx_timestamp) >= 1:
                 telm_q.put(telm_string)
                 last_tx_timestamp = time.time()
-            
-            #print(telm_string)
-
             '''
             state change parameter from ascent to descent V, A, H must change for more than 3.
             '''
@@ -179,14 +172,11 @@ def main(global_state, global_packet_count):
                 global_state.value = ascent
                 state_change.change_state = False
                 beep(3)
+                ascent_time_change = time.time()
     
         if (state == ascent):
             print("ascent state")
-            '''
-            telemetry storage
-            --> LoRa in reception mode, switch 00000000000to transmit mode and transmit telemetry
-            --> if receieved something process it
-            '''
+
             telm_string_ascent = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string_ascent)
             # telm_string_ascent -> lora_proc -> transmission to ground
@@ -195,9 +185,6 @@ def main(global_state, global_packet_count):
                 telm_q.put(telm_string_ascent)
                 last_tx_timestamp = time.time()
             '''
-            1.5s -> 10m
-            2s -> 18m
-            5s -> 112m
             state change parameter ->
                 -> v < 0
                 -> constant acceleration in y (g downward) 
@@ -205,25 +192,26 @@ def main(global_state, global_packet_count):
                 -> 2 seconds
                 -> state change DESCENT.
             '''
+            if (time.time() - ascent_time_change) >= 7:
+                rpicam_proc.start()
+
             descent_change_check()
             if state_change.change_state == True:
                 global_state.value = descent
-                beep(3)
         
         if (state == descent):
+            
             print("descent state")
 
-            if fins_flag:
-                nano_serial.write(actuate_fins_nano.encode())
-                fins_flag = 0
-   
-            ble = getline(blenano_proc_log)
-            ble_arr = ble.split(',')
-            altitude = float(ble_arr[6])
+            bme_line = getline(bme_log)
+            bme_arr = bme_line.split(',')
+            altitude = float(bme_arr[2][:-1])
 
+            
             if (altitude < 510) and parachute_enable:
                 nano_serial.write(deploy_parachute_nano.encode())
                 parachute_enable = 0
+            
 
             telm_string_descent = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string_descent)
@@ -243,13 +231,15 @@ def main(global_state, global_packet_count):
                 global_state.value = recovery
 
         if (state == recovery):
-            print("recovery")
-            GPIO.output(BUZZER_PIN, GPIO.HIGH)
+            #print("recovery")
+            buzzer.on()
             
             telm_string = generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag)
             telemetry_log_fd.write(telm_string)
-
-            sms_q.put(telm_string)
+            
+            if (time.time() - gsm_time_check) >= 1:
+                sms_q.put(telm_string)
+                gsm_time_check = time.time()
 
 
 def file_manager(global_state):
@@ -299,34 +289,23 @@ nanoble = "Timestamp", "Temperature", "Roll", "Pitch", "Yaw",
 #<TEAM_ID> <MISSION_TIME> <PACKET_COUNT> <BLE_TEMP><BLE_PRESSURE> <BLE_ALT> <HACKRF_FREQ> <HACKRF_RSSI> <AX> <AY> <AZ> <GX> <GY> <GZ> <MX><MY><MZ> <SOFTWARE_STATE> <GNSS_LAT> <GNSS_LONG> <GNSS_ALT> <GNSS_TIME> <GNSS_SATS> <VOLTAGE> <CURRENT> <RPI_TEMP> <LORA_RSSI><ERROR_FLAGS><CHECKSUM><ACK>$\r\n
 '''
 def generate_telemetry(global_packet_count, global_state, current_shared, voltage_shared, tx_enable, e_flag):
+    global bme_log
+    
     team_id = '050'
     mission_time = int(time.time() - mission_timer_start)
 
     try:
         ble = getline(blenano_proc_log)
         ble_arr = ble.split(',')
-        temp = ble_arr[1]
-        roll = ble_arr[2]
-        pitch = ble_arr[3]
-        yaw = ble_arr[4]
-        pressure = ble_arr[5]
-        ble_alt = ble_arr[6]
         ax, ay, az = ble_arr[7], ble_arr[8], ble_arr[9]
         gx, gy, gz = ble_arr[10], ble_arr[11], ble_arr[12]
         mx, my, mz = ble_arr[13], ble_arr[14], ble_arr[15][:-1]
     except:
-        temp = -1
-        roll = -1
-        pitch = -1
-        yaw = -1
-        pressure = -1
-        ble_alt = -1
-        ax, ay, az = -1000,-1000,-1000
-        gx, gy, gz = -1000,-1000,-1000
-        mx, my, mz = -1000,-1000,-1000
+        ax, ay, az = -10,-10,-10
+        gx, gy, gz = -10,-10,-10
+        mx, my, mz = -10,-10,-10
 
     gnss = getline('proc_files/gnss_proc_log')
-    gnss_arr = gnss.split(',')
     
     try:
         gnss_arr = gnss.split(',')
@@ -350,11 +329,22 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
     try:
         rtl_line = getline(rtl_log)
         rtl_arr = rtl_line.split(',')
-        freq = rtl_arr[1]
-        rssi = rtl_arr[2][:-1]
-    except IndexError:
+        freq = float(rtl_arr[1])
+        rssi = float(rtl_arr[2][:-1])
+    except:
         freq = 0
         rssi = 0
+
+    bme_line = getline(bme_log)
+    bme_arr = bme_line.split(',')
+    try:
+        temp = bme_arr[0]
+        pressure = bme_arr[1]
+        ble_alt = bme_arr[2][:-1]
+    except:
+        temp = 0.0
+        pressure = 0.0
+        ble_alt = 0.0
 
     current = current_shared.value # add code to calculate it 
     voltage = voltage_shared.value
@@ -375,19 +365,47 @@ def generate_telemetry(global_packet_count, global_state, current_shared, voltag
 
     return telm_str
 
-def beep(duration):
-    GPIO.output(BUZZER_PIN, GPIO.HIGH) # Turn the buzzer on
-    time.sleep(duration)               # Wait for the specified duration
-    GPIO.output(BUZZER_PIN, GPIO.LOW)
+def beep_proc():
+    global buzzer
+    buzzer.on()     # turn buzzer ON
+    time.sleep(2)
+    buzzer.off()    # turn buzzer OFF
+    sys.exit()
+
 
 def signal_handler(signum, frame):
-    print(f"{signum} recieved")
+    global blenano_proc
     global lora_proc
+    #global hackrf_proc
+    global gnss_proc
+    global gsm_proc
+    global rpicam_proc
+    global ocp_shutdown
+    global rtl_proc
+    global bme_proc
+    global lora_proc
+    global measure_voltage_proc
+    global nano_health_check_proc
+    global rpi_health
+
     blenano_proc.terminate()
-    lora_proc.terminate()
-    #gnss_proc.start()
-    #gsm_proc.start()
+    #lora_proc.terminate()
+    #hackrf_proc.start()
+    rtl_proc.terminate()     
+    gnss_proc.terminate()
+    measure_voltage_proc.terminate()
+    nano_health_check_proc.terminate()
+    rpi_health.terminate()
+    ocp_shutdown.terminate()
+    bme_proc.terminate()
+
+    blenano_proc.terminate()
+    gnss_proc.terminate()
+    gsm_proc.terminate()
     sys.exit()
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 if __name__ == '__main__':
